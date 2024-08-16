@@ -30,6 +30,8 @@ let UD_BUDGET_LIMITS        = "budgetLimitsV1"    // [tagKey: monthlyLimit Doubl
 let UD_MONTHLY_BUDGET       = "overallMonthlyBudget" // Overall monthly budget Double
 let UD_EXISTING_TX_MIGRATED = "existingTxCurrencyMigrated" // one-time migration flag
 let UD_CATEGORY_KEYWORDS    = "categoryKeywordsV1" // [tagKey: [String]] custom keyword mapping
+let UD_USER_CUSTOM_NAME     = "userCustomName"     // Custom name user wants to be called as
+let KEYCHAIN_GEMINI_KEY     = "gemini_api_key"     // Google Gemini AI API key stored securely in Keychain
 
 // Transaction types
 let TRANS_TYPE_INCOME  = "income"

@@ -21,6 +21,7 @@ struct ExpenseFilterView: View {
     @State private var filterType: ExpenseCDFilterTime = .all
     @State private var transType = TRANS_TYPE_EXPENSE
     @State private var selectedCategory: String? = nil
+    @State private var showPDFExport = false
     
     var body: some View {
         NavigationView {
@@ -28,7 +29,12 @@ struct ExpenseFilterView: View {
                 Color.primary_color.edgesIgnoringSafeArea(.all)
                 
                 VStack(spacing: 0) {
-                    ToolbarModelView(title: "Filter & Insights") { self.presentationMode.wrappedValue.dismiss() }
+                    ToolbarModelView(
+                        title: "Filter & Insights",
+                        button1Icon: IMAGE_SHARE_ICON,
+                        backButtonClick: { self.presentationMode.wrappedValue.dismiss() },
+                        button1Method: { showPDFExport = true }
+                    )
                     
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: 16) {
@@ -92,6 +98,11 @@ struct ExpenseFilterView: View {
                 .edgesIgnoringSafeArea(.top)
             }
             .navigationBarHidden(true)
+        }
+        .sheet(isPresented: $showPDFExport) {
+            ExportPDFReportView()
+                .environment(\.managedObjectContext, managedObjectContext)
+                .environmentObject(exchangeService)
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarHidden(true)

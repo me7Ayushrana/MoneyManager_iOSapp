@@ -3,7 +3,7 @@
 //  MoneyManager
 //
 //  Created for TrackMint.
-//  Rule-based NLP parser extracting amount, currency, date references, and title description from transcribed voice text.
+//  High-precision NLP voice parser extracting amount, currency, date, transaction type, and category.
 //
 
 import Foundation
@@ -25,7 +25,7 @@ class VoiceExpenseParser {
     
     private init() {}
     
-    /// Parses a raw spoken transcription string e.g. "spent 200 rupees on coffee today" or "300 on Swiggy yesterday".
+    /// Parses spoken text e.g. "spent 200 rupees on coffee today", "5k for grocery yesterday", "received 45000 salary".
     func parse(_ rawText: String, defaultCurrency: String) -> ParsedVoiceExpense {
         let trimmed = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
@@ -34,33 +34,31 @@ class VoiceExpenseParser {
         
         var workingText = trimmed
         
-        // 0. Detect Expense vs Income transaction type intent
+        // 1. Transaction Type Intent (Income vs Expense)
         let transactionType = extractTransactionType(from: workingText)
         
-        // 1. Extract Date reference
+        // 2. Date Reference ("yesterday", "today", "day before yesterday")
         let (extractedDate, textAfterDate) = extractDate(from: workingText)
         workingText = textAfterDate
         
-        // 2. Extract Currency code & strip currency words
+        // 3. Currency Code Extraction ("rupees", "inr", "rs", "dollars", "bucks", "euros", etc.)
         let (extractedCurrency, textAfterCurrency) = extractCurrency(from: workingText, defaultCurrency: defaultCurrency)
         workingText = textAfterCurrency
         
-        // 3. Extract Amount
+        // 4. Amount Extraction (handles numbers, "5k", "10k", "1 lakh", and number words)
         let (extractedAmount, textAfterAmount) = extractAmount(from: workingText)
         workingText = textAfterAmount
         
-        // 4. Clean up remaining title tokens
+        // 5. Title Cleaning & Smart Category Suggestion
         let cleanTitle = cleanTitleDescription(from: workingText)
         
-        // 5. Run title through existing SmartCategoryManager NLEmbedding suggestion logic
         var suggestedTagKey: String? = nil
-        if !cleanTitle.isEmpty {
-            let suggestions = SmartCategoryManager.shared.suggestCategories(for: cleanTitle, limit: 1)
-            suggestedTagKey = suggestions.first?.tagKey
-        }
+        let targetForCategory = cleanTitle.isEmpty ? trimmed : cleanTitle
+        let suggestions = SmartCategoryManager.shared.suggestCategories(for: targetForCategory, limit: 1)
+        suggestedTagKey = suggestions.first?.tagKey
         
         let success = extractedAmount != nil
-        let finalTitle = success ? (cleanTitle.isEmpty ? trimmed : cleanTitle) : trimmed
+        let finalTitle = cleanTitle.isEmpty ? (success ? "Transaction" : trimmed) : cleanTitle
         
         return ParsedVoiceExpense(
             rawText: trimmed,
@@ -74,9 +72,11 @@ class VoiceExpenseParser {
         )
     }
     
+    // MARK: - Transaction Type Intent
+    
     private func extractTransactionType(from text: String) -> String {
         let lower = text.lowercased()
-        let incomeKeywords = ["earned", "earning", "received", "salary", "credited", "income", "got paid", "cashback", "refund", "stipend", "deposit", "gain", "freelance"]
+        let incomeKeywords = ["earned", "earning", "received", "salary", "credited", "income", "got paid", "cashback", "refund", "stipend", "deposit", "freelance", "profit", "gift"]
         for kw in incomeKeywords {
             if lower.contains(kw) {
                 return TRANS_TYPE_INCOME
@@ -88,31 +88,58 @@ class VoiceExpenseParser {
     // MARK: - Amount Extraction
     
     private func extractAmount(from text: String) -> (Double?, String) {
-        // Match numbers e.g. 200, 300.50, 1500
-        let pattern = #"\b\d+(?:\.\d{1,2})?\b"#
-        if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
-            let nsString = text as NSString
-            if let match = regex.firstMatch(in: text, options: [], range: NSRange(location: 0, length: nsString.length)) {
+        var working = text
+        
+        // 1. Match numbers with multipliers e.g. "5k" -> 5000, "1.5k" -> 1500, "1 lakh" -> 100000
+        let multiplierPattern = #"\b(\d+(?:\.\d+)?)\s*(k|thousand|lakh|lac)\b"#
+        if let regex = try? NSRegularExpression(pattern: multiplierPattern, options: [.caseInsensitive]) {
+            let nsString = working as NSString
+            if let match = regex.firstMatch(in: working, options: [], range: NSRange(location: 0, length: nsString.length)) {
+                let numStr = nsString.substring(with: match.range(at: 1))
+                let unitStr = nsString.substring(with: match.range(at: 2)).lowercased()
+                
+                if let val = Double(numStr) {
+                    var finalVal = val
+                    if unitStr == "k" || unitStr == "thousand" {
+                        finalVal = val * 1000.0
+                    } else if unitStr == "lakh" || unitStr == "lac" {
+                        finalVal = val * 100000.0
+                    }
+                    let remaining = nsString.replacingCharacters(in: match.range, with: " ")
+                    return (finalVal, remaining)
+                }
+            }
+        }
+        
+        // 2. Standard numbers e.g. 200, 350.50, 1500
+        let numberPattern = #"\b\d+(?:\.\d{1,2})?\b"#
+        if let regex = try? NSRegularExpression(pattern: numberPattern, options: []) {
+            let nsString = working as NSString
+            let matches = regex.matches(in: working, options: [], range: NSRange(location: 0, length: nsString.length))
+            
+            // Return first sensible amount
+            for match in matches {
                 let matchedStr = nsString.substring(with: match.range)
-                if let val = Double(matchedStr) {
+                if let val = Double(matchedStr), val > 0 {
                     let remaining = nsString.replacingCharacters(in: match.range, with: " ")
                     return (val, remaining)
                 }
             }
         }
         
-        // Match number words e.g. "twenty", "fifty", "hundred"
+        // 3. Spoken number words e.g. "twenty", "fifty", "hundred"
         let numberWords: [String: Double] = [
             "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
             "fifteen": 15, "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90, "hundred": 100, "thousand": 1000
         ]
         
-        var words = text.components(separatedBy: .whitespaces)
+        let words = working.components(separatedBy: .whitespaces)
         for (idx, word) in words.enumerated() {
             let lower = word.lowercased().trimmingCharacters(in: .punctuationCharacters)
             if let val = numberWords[lower] {
-                words.remove(at: idx)
-                return (val, words.joined(separator: " "))
+                var mutableWords = words
+                mutableWords.remove(at: idx)
+                return (val, mutableWords.joined(separator: " "))
             }
         }
         
@@ -190,7 +217,7 @@ class VoiceExpenseParser {
     
     private func cleanTitleDescription(from text: String) -> String {
         let fillerWords: Set<String> = [
-            "spent", "pay", "paid", "bought", "got", "for", "on", "at", "amount", "cost", "price", "of", "and", "the", "a", "an"
+            "spent", "pay", "paid", "bought", "got", "for", "on", "at", "amount", "cost", "price", "of", "and", "the", "a", "an", "rs", "rupee", "rupees", "inr", "dollar", "dollars", "usd"
         ]
         
         let words = text.components(separatedBy: .whitespacesAndNewlines)

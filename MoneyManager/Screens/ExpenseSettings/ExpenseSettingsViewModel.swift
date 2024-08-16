@@ -71,10 +71,9 @@ class ExpenseSettingsViewModel: ObservableObject {
         guard oldCode != code else { return }
         
         let currentBudget = UserDefaults.standard.double(forKey: UD_MONTHLY_BUDGET)
-        if currentBudget > 0 {
-            let convertedBudget = exchangeService.convertedAmount(currentBudget, from: oldCode, to: code)
-            UserDefaults.standard.set(convertedBudget, forKey: UD_MONTHLY_BUDGET)
-        }
+        let effectiveBudget = currentBudget > 0 ? currentBudget : 5000.0
+        let convertedBudget = exchangeService.convertedAmount(effectiveBudget, from: oldCode, to: code)
+        UserDefaults.standard.set(convertedBudget, forKey: UD_MONTHLY_BUDGET)
         
         BudgetManager.shared.convertLimits(from: oldCode, to: code, using: exchangeService)
         

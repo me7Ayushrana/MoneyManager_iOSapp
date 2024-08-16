@@ -17,6 +17,9 @@ extension Color {
     }
     
     // Fintech Palette Tokens
+    static var BrandNavy: Color { Color(hex: "0F1115") }
+    static var BrandMint: Color { Color(hex: "10B981") }
+    
     static var main_color: Color {
         isDarkModeEnabled ? Color(hex: "3B82F6") : Color(hex: "2563EB")
     }

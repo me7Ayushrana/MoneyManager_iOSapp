@@ -23,10 +23,12 @@ struct ExpenseView: View {
     @EnvironmentObject var syncMonitor: CloudKitSyncMonitor
     
     @AppStorage(UD_DISPLAY_CURRENCY) var displayCurrency: String = "INR"
+    @AppStorage(UD_USER_CUSTOM_NAME) var userName: String = "Ayush"
     
     @State private var showAddExpense = false
     @State private var showFilter = false
     @State private var showSettings = false
+    @State private var showMintAIChat = false
     
     // Filter State
     @State private var activeFilter: DashboardFilterType = .quick(.all)
@@ -61,7 +63,7 @@ struct ExpenseView: View {
                                     .foregroundColor(Color.text_secondary_color)
                                 
                                 HStack(spacing: 6) {
-                                    Text("Ayush 👋")
+                                    Text("\(userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Ayush" : userName) 👋")
                                         .modifier(InterFont(.bold, size: 28))
                                         .foregroundColor(Color.text_primary_color)
                                     
@@ -83,7 +85,20 @@ struct ExpenseView: View {
                             
                             Spacer()
                             
-                            HStack(spacing: 12) {
+                            HStack(spacing: 10) {
+                                // MintAI Assistant Button
+                                Button(action: { showMintAIChat = true }) {
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 17, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .frame(width: 40, height: 40)
+                                        .background(
+                                            LinearGradient(gradient: Gradient(colors: [Color.main_color, Color.main_color.opacity(0.75)]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                                        )
+                                        .cornerRadius(20)
+                                        .shadow(color: Color.main_color.opacity(0.3), radius: 6, x: 0, y: 3)
+                                }
+                                
                                 // Theme toggle
                                 Button(action: { themeManager.toggle() }) {
                                     Image(systemName: themeManager.isDarkMode ? "sun.max.fill" : "moon.fill")
@@ -239,6 +254,11 @@ struct ExpenseView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showMintAIChat) {
+                MintAIChatView()
+                    .environment(\.managedObjectContext, managedObjectContext)
+                    .environmentObject(exchangeService)
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarHidden(true)
@@ -250,6 +270,22 @@ struct ExpenseView: View {
         let fmt = DateFormatter()
         let symbol = fmt.shortMonthSymbols[month - 1]
         return "\(symbol) \(year)"
+    }
+}
+
+enum TransactionTypeFilter: String, CaseIterable, Identifiable {
+    case all = "All"
+    case expense = "Expense"
+    case income = "Income"
+    
+    var id: String { rawValue }
+    
+    var label: String {
+        switch self {
+        case .all: return "All"
+        case .expense: return "Expense"
+        case .income: return "Income"
+        }
     }
 }
 
@@ -268,6 +304,18 @@ struct ExpenseMainView: View {
     @State private var animateHeader = false
     @State private var animateItems = false
     @State private var isBalanceHidden = false
+    @State private var transactionTypeFilter: TransactionTypeFilter = .all
+    
+    var filteredExpenses: [ExpenseCD] {
+        switch transactionTypeFilter {
+        case .all:
+            return Array(expense)
+        case .expense:
+            return expense.filter { $0.type == TRANS_TYPE_EXPENSE }
+        case .income:
+            return expense.filter { $0.type == TRANS_TYPE_INCOME }
+        }
+    }
     
     init(filterType: DashboardFilterType) {
         let sort = NSSortDescriptor(key: "occuredOn", ascending: false)
@@ -434,30 +482,86 @@ struct ExpenseMainView: View {
                     .offset(y: animateHeader ? 0 : -10)
                     .opacity(animateHeader ? 1 : 0)
                     
-                    // ── Recent Transactions Header ──
+                    // ── Recent Transactions Header with Dropdown Menu ──
                     HStack {
                         TextView(text: "Recent Transactions", type: .h5)
                             .foregroundColor(Color.text_primary_color)
+                        
                         Spacer()
+                        
+                        Menu {
+                            ForEach(TransactionTypeFilter.allCases) { filter in
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        transactionTypeFilter = filter
+                                    }
+                                }) {
+                                    HStack {
+                                        Text(filter == .all ? "All Transactions" : (filter == .expense ? "Expenses Only" : "Income Only"))
+                                        if transactionTypeFilter == filter {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 5) {
+                                Image(systemName: transactionTypeFilter == .all ? "line.3.horizontal.decrease.circle" : (transactionTypeFilter == .expense ? "arrow.down.right.circle.fill" : "arrow.up.forward.circle.fill"))
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(transactionTypeFilter == .all ? Color.text_secondary_color : (transactionTypeFilter == .expense ? Color.main_red : Color.main_green))
+                                
+                                Text(transactionTypeFilter.label)
+                                    .font(.system(size: 13, weight: .semibold))
+                                
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 10, weight: .semibold))
+                            }
+                            .foregroundColor(transactionTypeFilter == .all ? Color.text_primary_color : Color.text_primary_color)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(Color.secondary_color)
+                            .cornerRadius(12)
+                            .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
+                        }
                     }
                     .padding(.top, 6)
                     .padding(.horizontal, 4)
                     
-                    // ── Transaction Cards (20 pt radius, 12 pt spacing) ──
+                    // ── Transaction Cards (Filtered by All, Expense, or Income) ──
                     VStack(spacing: 10) {
-                        ForEach(expense) { expenseObj in
-                            let index = expense.firstIndex(of: expenseObj) ?? 0
-                            NavigationLink(
-                                destination: ExpenseDetailedView(expenseObj: expenseObj)
-                                    .environmentObject(exchangeService),
-                                label: {
-                                    ExpenseTransView(expenseObj: expenseObj)
-                                        .environmentObject(exchangeService)
-                                        .offset(y: animateItems ? 0 : 30)
-                                        .opacity(animateItems ? 1 : 0)
-                                        .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(Double(index) * 0.03 + 0.15), value: animateItems)
+                        if filteredExpenses.isEmpty {
+                            VStack(spacing: 8) {
+                                Image(systemName: "tray")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(Color.text_secondary_color)
+                                    .padding(.top, 16)
+                                Text("No \(transactionTypeFilter.label.lowercased()) transactions recorded for this period")
+                                    .modifier(InterFont(.medium, size: 13))
+                                    .foregroundColor(Color.text_secondary_color)
+                                Button(action: {
+                                    withAnimation { transactionTypeFilter = .all }
+                                }) {
+                                    Text("Show All Transactions")
+                                        .modifier(InterFont(.semiBold, size: 12))
+                                        .foregroundColor(Color.main_color)
                                 }
-                            )
+                                .padding(.bottom, 12)
+                            }
+                        } else {
+                            ForEach(filteredExpenses) { expenseObj in
+                                let index = filteredExpenses.firstIndex(of: expenseObj) ?? 0
+                                NavigationLink(
+                                    destination: ExpenseDetailedView(expenseObj: expenseObj)
+                                        .environmentObject(exchangeService),
+                                    label: {
+                                        ExpenseTransView(expenseObj: expenseObj)
+                                            .environmentObject(exchangeService)
+                                            .offset(y: animateItems ? 0 : 30)
+                                            .opacity(animateItems ? 1 : 0)
+                                            .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(Double(index) * 0.03 + 0.15), value: animateItems)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -748,14 +852,20 @@ struct DynamicBudgetSubtitleView: View {
         }
         
         let percentage = monthlyBudget > 0 ? (totalExpenses / monthlyBudget) * 100.0 : 0.0
-        let percentageInt = Int(percentage.rounded())
-        let isHighUsage = percentageInt >= 80
+        let percentageText: String = {
+            if percentage > 0 && percentage < 1 {
+                return String(format: "%.1f", percentage)
+            } else {
+                return "\(Int(percentage.rounded()))"
+            }
+        }()
+        let isHighUsage = percentage >= 80.0
         
         HStack(spacing: 6) {
             HStack(spacing: 4) {
                 Image(systemName: isHighUsage ? "exclamationmark.triangle.fill" : "chart.line.uptrend.xyaxis")
                     .font(.system(size: 10, weight: .bold))
-                Text("\(percentageInt)%")
+                Text("\(percentageText)%")
                     .modifier(InterFont(.bold, size: 11))
             }
             .foregroundColor(isHighUsage ? Color.main_red : Color.main_color)
@@ -763,7 +873,7 @@ struct DynamicBudgetSubtitleView: View {
             .background((isHighUsage ? Color.main_red : Color.main_color).opacity(0.12))
             .cornerRadius(12)
             
-            Text("You have spent \(percentageInt)% of your monthly budget.")
+            Text("Spent \(symbolFor(currencyCode: displayCurrency)) \(String(format: "%.0f", totalExpenses)) of \(symbolFor(currencyCode: displayCurrency)) \(String(format: "%.0f", monthlyBudget)) (\(percentageText)%)")
                 .modifier(InterFont(.medium, size: 13))
                 .foregroundColor(Color.text_secondary_color)
         }

@@ -74,6 +74,7 @@ class BudgetManager: ObservableObject {
             let converted = exchangeService.convertedAmount(val, from: oldCode, to: newCode)
             updated[tag] = converted
         }
+        objectWillChange.send()
         limits = updated
     }
     

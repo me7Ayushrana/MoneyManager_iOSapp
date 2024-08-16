@@ -37,20 +37,44 @@ struct MoneyManagerApp: App {
                 UserDefaults.standard.set(code, forKey: UD_DISPLAY_CURRENCY)
             }
         }
+        // Sanitize corrupted budget from legacy double-conversions
+        let storedBudget = UserDefaults.standard.double(forKey: UD_MONTHLY_BUDGET)
+        if storedBudget > 500000 {
+            let curr = UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) ?? "INR"
+            let cleanBudget: Double = (curr == "INR" || curr == "JPY") ? 50000.0 : 600.0
+            UserDefaults.standard.set(cleanBudget, forKey: UD_MONTHLY_BUDGET)
+        }
     }
     
     @StateObject private var authManager       = AppleAuthManager.shared
     @StateObject private var syncMonitor       = CloudKitSyncMonitor.shared
     
+    @State private var isSplashFinished        = false
+    private static var isColdLaunch            = true
+    
     var body: some Scene {
         WindowGroup {
-            Group {
-                if UserDefaults.standard.bool(forKey: UD_USE_BIOMETRIC) {
-                    AuthenticateView(viewModel: AuthenticationViewModel())
-                        .environment(\.managedObjectContext, persistentContainer.viewContext)
-                } else {
-                    ExpenseView()
-                        .environment(\.managedObjectContext, persistentContainer.viewContext)
+            ZStack {
+                Group {
+                    if UserDefaults.standard.bool(forKey: UD_USE_BIOMETRIC) {
+                        AuthenticateView(viewModel: AuthenticationViewModel())
+                            .environment(\.managedObjectContext, persistentContainer.viewContext)
+                    } else {
+                        ExpenseView()
+                            .environment(\.managedObjectContext, persistentContainer.viewContext)
+                    }
+                }
+                .opacity(isSplashFinished ? 1.0 : 0.0)
+                
+                if !isSplashFinished {
+                    AnimatedSplashView(isQuickMode: !Self.isColdLaunch) {
+                        Self.isColdLaunch = false
+                        withAnimation(.easeInOut(duration: 0.35)) {
+                            isSplashFinished = true
+                        }
+                    }
+                    .transition(.opacity)
+                    .zIndex(999)
                 }
             }
             .environmentObject(themeManager)

@@ -19,11 +19,34 @@ struct ExpenseSettingsView: View {
     
     @ObservedObject private var viewModel = ExpenseSettingsViewModel()
     @AppStorage(UD_MONTHLY_BUDGET) var monthlyBudget: Double = 5000.0
+    @AppStorage(UD_USER_CUSTOM_NAME) var customUserName: String = "Ayush"
+    
+    @FetchRequest(
+        entity: ExpenseCD.entity(),
+        sortDescriptors: [NSSortDescriptor(keyPath: \ExpenseCD.occuredOn, ascending: false)],
+        predicate: NSPredicate(format: "type == %@", TRANS_TYPE_EXPENSE)
+    ) var allExpenses: FetchedResults<ExpenseCD>
+    
+    private func categorySpent(for tagKey: String) -> Double {
+        let cal = Calendar.current
+        let now = Date()
+        let comp = cal.dateComponents([.year, .month], from: now)
+        guard let startOfMonth = cal.date(from: comp) else { return 0 }
+        
+        return allExpenses.reduce(0.0) { acc, tx in
+            guard let date = tx.occuredOn, date >= startOfMonth, tx.tag == tagKey else { return acc }
+            return acc + exchangeService.convertedAmount(tx.amount, from: tx.resolvedCurrencyCode, to: viewModel.displayCurrency)
+        }
+    }
     
     @State private var selectDisplayCurrency = false
     @State private var showBudgetSheet = false
     @State private var selectedBudgetTag: String? = nil
     @State private var showSignOutAlert = false
+    @State private var showNameSheet = false
+    @State private var showPDFExportSheet = false
+    @State private var showGeminiSetupSheet = false
+    @State private var showMintAIChat = false
     
     let tagOptions = [
         TRANS_TAG_TRANSPORT, TRANS_TAG_FOOD, TRANS_TAG_HOUSING,
@@ -48,6 +71,39 @@ struct ExpenseSettingsView: View {
                                     .modifier(InterFont(.semiBold, size: 11))
                                     .foregroundColor(Color.text_secondary_color)
                                     .padding(.horizontal, 4)
+                                
+                                // Name Option Row
+                                Button(action: { showNameSheet = true }) {
+                                    HStack {
+                                        Image(systemName: "person.circle.fill")
+                                            .font(.system(size: 18, weight: .medium))
+                                            .foregroundColor(Color.main_color)
+                                            .frame(width: 36, height: 36)
+                                            .background(Color.main_color.opacity(0.12))
+                                            .cornerRadius(10)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            TextView(text: "Your Name", type: .button)
+                                                .foregroundColor(Color.text_primary_color)
+                                            Text("Name shown in home greeting")
+                                                .modifier(InterFont(.regular, size: 11))
+                                                .foregroundColor(Color.text_secondary_color)
+                                        }
+                                        Spacer()
+                                        Text(customUserName.isEmpty ? "Ayush" : customUserName)
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(Color.main_color)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 6)
+                                            .background(Color.main_color.opacity(0.12))
+                                            .cornerRadius(8)
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundColor(Color.text_secondary_color)
+                                    }
+                                    .padding(14)
+                                    .background(Color.secondary_color)
+                                    .cornerRadius(12)
+                                }
                                 
                                 // Biometric toggle
                                 HStack {
@@ -102,7 +158,11 @@ struct ExpenseSettingsView: View {
                                 .actionSheet(isPresented: $selectDisplayCurrency) {
                                     var buttons: [ActionSheet.Button] = SUPPORTED_CURRENCIES.map { curr in
                                         .default(Text(curr.displayLabel)) {
-                                            viewModel.saveDisplayCurrency(code: curr.code, exchangeService: exchangeService)
+                                            let oldCode = viewModel.displayCurrency
+                                            if oldCode != curr.code {
+                                                viewModel.saveDisplayCurrency(code: curr.code, exchangeService: exchangeService)
+                                                self.monthlyBudget = UserDefaults.standard.double(forKey: UD_MONTHLY_BUDGET)
+                                            }
                                         }
                                     }
                                     buttons.append(.cancel())
@@ -199,7 +259,7 @@ struct ExpenseSettingsView: View {
                                 .padding(.horizontal, 4)
                                 
                                 ForEach(tagOptions, id: \.self) { tagKey in
-                                    BudgetProgressView(tag: tagKey, spentConverted: 0, displayCurrency: viewModel.displayCurrency)
+                                    BudgetProgressView(tag: tagKey, spentConverted: categorySpent(for: tagKey), displayCurrency: viewModel.displayCurrency)
                                         .environmentObject(budgetManager)
                                         .onTapGesture {
                                             selectedBudgetTag = tagKey
@@ -298,6 +358,143 @@ struct ExpenseSettingsView: View {
                                 }
                             }
                             
+                             // ── AI & GEMINI SETUP ──
+                             VStack(alignment: .leading, spacing: 10) {
+                                 Text("AI & GEMINI SETUP")
+                                     .modifier(InterFont(.semiBold, size: 11))
+                                     .foregroundColor(Color.text_secondary_color)
+                                     .padding(.horizontal, 4)
+                                 
+                                 // MintAI Chat Assistant
+                                 Button(action: {
+                                     if GeminiAIService.shared.isKeyConfigured {
+                                         showMintAIChat = true
+                                     } else {
+                                         showGeminiSetupSheet = true
+                                     }
+                                 }) {
+                                     HStack {
+                                         Image(systemName: "sparkles")
+                                             .font(.system(size: 18, weight: .medium))
+                                             .foregroundColor(.white)
+                                             .frame(width: 36, height: 36)
+                                             .background(
+                                                 LinearGradient(gradient: Gradient(colors: [Color.main_color, Color.main_color.opacity(0.7)]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                                             )
+                                             .cornerRadius(10)
+                                         VStack(alignment: .leading, spacing: 2) {
+                                             TextView(text: "MintAI Financial Assistant", type: .button)
+                                                 .foregroundColor(Color.text_primary_color)
+                                             Text("Chatbot Q&A, money advice & savings tips")
+                                                 .modifier(InterFont(.regular, size: 11))
+                                                 .foregroundColor(Color.text_secondary_color)
+                                         }
+                                         Spacer()
+                                         Text(GeminiAIService.shared.isKeyConfigured ? "Active ✨" : "Setup")
+                                             .modifier(InterFont(.bold, size: 11))
+                                             .foregroundColor(GeminiAIService.shared.isKeyConfigured ? Color.main_color : Color.text_secondary_color)
+                                             .padding(.horizontal, 8)
+                                             .padding(.vertical, 4)
+                                             .background(GeminiAIService.shared.isKeyConfigured ? Color.main_color.opacity(0.12) : Color.secondary_color)
+                                             .cornerRadius(8)
+                                         Image(systemName: "chevron.right")
+                                             .font(.system(size: 13, weight: .semibold))
+                                             .foregroundColor(Color.text_secondary_color)
+                                     }
+                                     .padding(14)
+                                     .background(Color.secondary_color)
+                                     .cornerRadius(12)
+                                 }
+                                 
+                                 // Configure Gemini API Key Row
+                                 Button(action: { showGeminiSetupSheet = true }) {
+                                     HStack {
+                                         Image(systemName: "key.fill")
+                                             .font(.system(size: 18, weight: .medium))
+                                             .foregroundColor(Color.main_color)
+                                             .frame(width: 36, height: 36)
+                                             .background(Color.main_color.opacity(0.12))
+                                             .cornerRadius(10)
+                                         VStack(alignment: .leading, spacing: 2) {
+                                             TextView(text: "Google Gemini API Key", type: .button)
+                                                 .foregroundColor(Color.text_primary_color)
+                                             Text("Configure free API key & setup guide")
+                                                 .modifier(InterFont(.regular, size: 11))
+                                                 .foregroundColor(Color.text_secondary_color)
+                                         }
+                                         Spacer()
+                                         Image(systemName: "chevron.right")
+                                             .font(.system(size: 13, weight: .semibold))
+                                             .foregroundColor(Color.text_secondary_color)
+                                     }
+                                     .padding(14)
+                                     .background(Color.secondary_color)
+                                     .cornerRadius(12)
+                                 }
+                             }
+                            
+                            // ── DATA & EXPORT SECTION ──
+                             VStack(alignment: .leading, spacing: 10) {
+                                 Text("DATA & EXPORT")
+                                     .modifier(InterFont(.semiBold, size: 11))
+                                     .foregroundColor(Color.text_secondary_color)
+                                     .padding(.horizontal, 4)
+                                 
+                                 // Export PDF Report Option
+                                 Button(action: { showPDFExportSheet = true }) {
+                                     HStack {
+                                         Image(systemName: "doc.richtext.fill")
+                                             .font(.system(size: 18, weight: .medium))
+                                             .foregroundColor(Color.main_color)
+                                             .frame(width: 36, height: 36)
+                                             .background(Color.main_color.opacity(0.12))
+                                             .cornerRadius(10)
+                                         VStack(alignment: .leading, spacing: 2) {
+                                             TextView(text: "Export PDF Financial Report", type: .button)
+                                                 .foregroundColor(Color.text_primary_color)
+                                             Text("Custom ranges, charts, and formatted tables")
+                                                 .modifier(InterFont(.regular, size: 11))
+                                                 .foregroundColor(Color.text_secondary_color)
+                                         }
+                                         Spacer()
+                                         Image(systemName: "chevron.right")
+                                             .font(.system(size: 13, weight: .semibold))
+                                             .foregroundColor(Color.text_secondary_color)
+                                     }
+                                     .padding(14)
+                                     .background(Color.secondary_color)
+                                     .cornerRadius(12)
+                                 }
+                                 
+                                 // Export CSV Option
+                                 Button(action: {
+                                     viewModel.exportTransactions(moc: managedObjectContext, exchangeService: exchangeService)
+                                 }) {
+                                     HStack {
+                                         Image(systemName: "tablecells.fill")
+                                             .font(.system(size: 18, weight: .medium))
+                                             .foregroundColor(Color.main_color)
+                                             .frame(width: 36, height: 36)
+                                             .background(Color.main_color.opacity(0.12))
+                                             .cornerRadius(10)
+                                         VStack(alignment: .leading, spacing: 2) {
+                                             TextView(text: "Export CSV Raw Data", type: .button)
+                                                 .foregroundColor(Color.text_primary_color)
+                                             Text("Spreadsheet compatible CSV file")
+                                                 .modifier(InterFont(.regular, size: 11))
+                                                 .foregroundColor(Color.text_secondary_color)
+                                         }
+                                         Spacer()
+                                         Image(systemName: "square.and.arrow.up")
+                                             .font(.system(size: 13, weight: .semibold))
+                                             .foregroundColor(Color.text_secondary_color)
+                                     }
+                                     .padding(14)
+                                     .background(Color.secondary_color)
+                                     .cornerRadius(12)
+                                 }
+                             }
+                            
                             // ── APP INFO SECTION ──
                             VStack(alignment: .leading, spacing: 10) {
                                 Text("ABOUT")
@@ -321,6 +518,22 @@ struct ExpenseSettingsView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showNameSheet) {
+                SetNameSheet(customUserName: $customUserName)
+            }
+            .sheet(isPresented: $showPDFExportSheet) {
+                ExportPDFReportView()
+                    .environment(\.managedObjectContext, managedObjectContext)
+                    .environmentObject(exchangeService)
+            }
+            .sheet(isPresented: $showGeminiSetupSheet) {
+                GeminiKeySetupSheet()
+            }
+            .sheet(isPresented: $showMintAIChat) {
+                MintAIChatView()
+                    .environment(\.managedObjectContext, managedObjectContext)
+                    .environmentObject(exchangeService)
+            }
             .sheet(isPresented: Binding<Bool>(
                 get: { selectedBudgetTag != nil },
                 set: { if !$0 { selectedBudgetTag = nil } }
@@ -339,6 +552,74 @@ struct ExpenseSettingsView: View {
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
+    }
+}
+
+// MARK: - Set Name Sheet
+
+struct SetNameSheet: View {
+    @Binding var customUserName: String
+    @Environment(\.presentationMode) var presentationMode
+    @State private var nameText: String = ""
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Text("Your Display Name")
+                    .modifier(InterFont(.bold, size: 18))
+                    .foregroundColor(Color.text_primary_color)
+                Spacer()
+                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(Color.text_secondary_color)
+                }
+            }
+            .padding(.top, 20)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("What would you like TrackMint to call you?")
+                    .modifier(InterFont(.medium, size: 13))
+                    .foregroundColor(Color.text_secondary_color)
+                
+                HStack {
+                    Image(systemName: "person.fill")
+                        .modifier(InterFont(.semiBold, size: 16))
+                        .foregroundColor(Color.main_color)
+                        .padding(.leading, 12)
+                    
+                    TextField("Enter your name (e.g. Ayush)", text: $nameText)
+                        .modifier(InterFont(.semiBold, size: 16))
+                        .padding(.vertical, 14)
+                }
+                .background(Color.secondary_color)
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.main_color.opacity(0.2), lineWidth: 1))
+            }
+            
+            Button(action: {
+                let trimmed = nameText.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty {
+                    customUserName = trimmed
+                }
+                presentationMode.wrappedValue.dismiss()
+            }) {
+                Text("Save Name")
+                    .modifier(InterFont(.semiBold, size: 16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.main_color)
+                    .cornerRadius(12)
+            }
+            
+            Spacer()
+        }
+        .padding(20)
+        .background(Color.primary_color.edgesIgnoringSafeArea(.all))
+        .onAppear {
+            nameText = customUserName
+        }
     }
 }
 

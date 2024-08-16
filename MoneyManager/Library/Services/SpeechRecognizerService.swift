@@ -18,13 +18,15 @@ class SpeechRecognizerService: NSObject, ObservableObject {
     @Published var permissionDenied: Bool = false
     @Published var errorMessage: String? = nil
     
-    private var speechRecognizer: SFSpeechRecognizer? = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    private var speechRecognizer: SFSpeechRecognizer?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private let audioEngine = AVAudioEngine()
     
     override init() {
         super.init()
+        // Initialize with current user locale (e.g. en-IN, en-US, etc.) for top accuracy
+        self.speechRecognizer = SFSpeechRecognizer(locale: Locale.current) ?? SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     }
     
     /// Requests microphone and speech recognition permissions, then starts or stops recording.
@@ -87,6 +89,7 @@ class SpeechRecognizerService: NSObject, ObservableObject {
         let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
         
+        inputNode.removeTap(onBus: 0) // Reset any existing taps safely
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
             recognitionRequest.append(buffer)
         }
