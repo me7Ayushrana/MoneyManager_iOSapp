@@ -19,6 +19,7 @@
 		738B1C3C25C662580067407B /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C3B25C662580067407B /* Models.swift */; };
 		738B1C4025C662890067407B /* InterFontModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C3F25C662890067407B /* InterFontModifier.swift */; };
 		738B1C4325C6629D0067407B /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C4225C6629C0067407B /* ColorExtension.swift */; };
+		AA1B2C3D4E5F60718293A4B6 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F60718293A4B5 /* ThemeManager.swift */; };
 		738B1C4625C662D90067407B /* TextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C4525C662D90067407B /* TextView.swift */; };
 		738B1C4925C662F20067407B /* DropdownButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C4825C662F20067407B /* DropdownButton.swift */; };
 		738B1C4C25C663060067407B /* DismissKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C4B25C663060067407B /* DismissKeyboard.swift */; };
@@ -49,6 +50,10 @@
 		753CBDD325F36864005762B8 /* BiometricAuthUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 753CBDD225F36864005762B8 /* BiometricAuthUtility.swift */; };
 		75C6B48025F37FD20079BCFC /* AuthenticationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C6B47F25F37FD20079BCFC /* AuthenticationViewModel.swift */; };
 		FF29C9FFAF86E0452686C5D0 /* Pods_MoneyManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1B0E373FB89DD0864398FEE7 /* Pods_MoneyManager.framework */; };
+		FF46CBDF1D92154A86BC64BD /* ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6C4009BD6BAC4C9AB0588E /* ExchangeRateService.swift */; };
+		FFC623DAD12BAA43ACA78AD0 /* BudgetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF38F5D50C39D144D8B94AC4 /* BudgetManager.swift */; };
+		FFE7E6D4917C7142D581524D /* CurrencyAmountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7395096DE46D47DC95CD80 /* CurrencyAmountView.swift */; };
+		FF602276AF79054AE286B1EE /* BudgetProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA75E5973506A4143AA18FB /* BudgetProgressView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,6 +73,7 @@
 		738B1C3B25C662580067407B /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		738B1C3F25C662890067407B /* InterFontModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterFontModifier.swift; sourceTree = "<group>"; };
 		738B1C4225C6629C0067407B /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
+		AA1B2C3D4E5F60718293A4B5 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		738B1C4525C662D90067407B /* TextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextView.swift; sourceTree = "<group>"; };
 		738B1C4825C662F20067407B /* DropdownButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropdownButton.swift; sourceTree = "<group>"; };
 		738B1C4B25C663060067407B /* DismissKeyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissKeyboard.swift; sourceTree = "<group>"; };
@@ -98,6 +104,10 @@
 		753CBDD225F36864005762B8 /* BiometricAuthUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthUtility.swift; sourceTree = "<group>"; };
 		75C6B47F25F37FD20079BCFC /* AuthenticationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationViewModel.swift; sourceTree = "<group>"; };
 		B07E4D1AF457AB52E048A8B5 /* Pods-MoneyManager.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MoneyManager.release.xcconfig"; path = "Target Support Files/Pods-MoneyManager/Pods-MoneyManager.release.xcconfig"; sourceTree = "<group>"; };
+		FF6C4009BD6BAC4C9AB0588E /* ExchangeRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/ExchangeRateService.swift"; sourceTree = "<group>"; };
+		FF38F5D50C39D144D8B94AC4 /* BudgetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/BudgetManager.swift"; sourceTree = "<group>"; };
+		FF7395096DE46D47DC95CD80 /* CurrencyAmountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/CurrencyAmountView.swift"; sourceTree = "<group>"; };
+		FFA75E5973506A4143AA18FB /* BudgetProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/BudgetProgressView.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -217,6 +227,7 @@
 				738B1C3B25C662580067407B /* Models.swift */,
 				738B1C3F25C662890067407B /* InterFontModifier.swift */,
 				738B1C4225C6629C0067407B /* ColorExtension.swift */,
+				AA1B2C3D4E5F60718293A4B5 /* ThemeManager.swift */,
 				738B1C4525C662D90067407B /* TextView.swift */,
 				738B1C4825C662F20067407B /* DropdownButton.swift */,
 				738B1C4B25C663060067407B /* DismissKeyboard.swift */,
@@ -448,6 +459,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FF46CBDF1D92154A86BC64BD /* ExchangeRateService.swift in Sources */,
+				FFC623DAD12BAA43ACA78AD0 /* BudgetManager.swift in Sources */,
+				FFE7E6D4917C7142D581524D /* CurrencyAmountView.swift in Sources */,
+				FF602276AF79054AE286B1EE /* BudgetProgressView.swift in Sources */,
 				738B1C3825C661750067407B /* ExpenseView.swift in Sources */,
 				73998C5525DA5578007D735B /* AttachmentHandler.swift in Sources */,
 				738B1C8425C6764B0067407B /* ExpenseDetailedViewModel.swift in Sources */,
@@ -459,6 +474,7 @@
 				739DFF7B25DC1E3C005BD5C8 /* AuthenticateView.swift in Sources */,
 				738B1C3325C660140067407B /* ExpenseCD.swift in Sources */,
 				738B1C4325C6629D0067407B /* ColorExtension.swift in Sources */,
+				AA1B2C3D4E5F60718293A4B6 /* ThemeManager.swift in Sources */,
 				738B1C4025C662890067407B /* InterFontModifier.swift in Sources */,
 				738B1C3C25C662580067407B /* Models.swift in Sources */,
 				753CBDD325F36864005762B8 /* BiometricAuthUtility.swift in Sources */,

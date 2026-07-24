@@ -6,22 +6,20 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct ExpenseView: View {
     
-    @AppStorage("isDarkMode") var isDarkMode = true
-    
-    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    // CoreData
     @Environment(\.managedObjectContext) var managedObjectContext
-    @FetchRequest(fetchRequest: ExpenseCD.getAllExpenseData(sortBy: ExpenseCDSort.occuredOn, ascending: false)) var expense: FetchedResults<ExpenseCD>
+    @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var exchangeService: ExchangeRateService
     
-    @State private var filter: ExpenseCDFilterTime = .all
-    @State private var showFilterSheet = false
+    @AppStorage(UD_DISPLAY_CURRENCY) var displayCurrency: String = "INR"
     
-    @State private var showOptionsSheet = false
-    @State private var displayAbout = false
-    @State private var displaySettings = false
+    @State private var showAddExpense = false
+    @State private var showFilter = false
+    @State private var showSettings = false
+    @State private var expenseFilter: ExpenseCDFilterTime = .all
     @State private var isAnimatingFAB = false
     
     var body: some View {
@@ -29,281 +27,345 @@ struct ExpenseView: View {
             ZStack {
                 Color.primary_color.edgesIgnoringSafeArea(.all)
                 
-                VStack {
-                    NavigationLink(destination: NavigationLazyView(ExpenseSettingsView()), isActive: $displaySettings, label: {})
-                    NavigationLink(destination: NavigationLazyView(AboutView()), isActive: $displayAbout, label: {})
-                    ToolbarModelView(title: "Dashboard", hasBackButt: false, button1Icon: IMAGE_OPTION_ICON, button2Icon: IMAGE_FILTER_ICON) { self.presentationMode.wrappedValue.dismiss() }
-                        button1Method: { self.showOptionsSheet = true }
-                        button2Method: { self.showFilterSheet = true }
-                        .actionSheet(isPresented: $showFilterSheet) {
-                            ActionSheet(title: Text("Select a filter"), buttons: [
-                                    .default(Text("Overall")) { filter = .all },
-                                    .default(Text("Last 7 days")) { filter = .week },
-                                    .default(Text("Last 30 days")) { filter = .month },
-                                    .cancel()
-                             ])
+                VStack(spacing: 0) {
+                    // Toolbar
+                    HStack {
+                        TextView(text: "Dashboard", type: .h6).foregroundColor(Color.text_primary_color)
+                        Spacer()
+                        // Theme toggle
+                        Button(action: { themeManager.toggle() }) {
+                            Image(systemName: themeManager.isDarkMode ? "sun.max.fill" : "moon.fill")
+                                .renderingMode(.template)
+                                .resizable()
+                                .frame(width: 22.0, height: 22.0)
+                                .foregroundColor(Color.text_primary_color)
+                        }.padding(.horizontal, 8)
+                        // Filter
+                        Button(action: { showFilter = true }) {
+                            Image(IMAGE_FILTER_ICON).renderingMode(.template).resizable()
+                                .frame(width: 28.0, height: 28.0).foregroundColor(Color.text_primary_color)
+                        }.padding(.horizontal, 8)
+                        // Settings
+                        Button(action: { showSettings = true }) {
+                            Image(IMAGE_OPTION_ICON).renderingMode(.template).resizable()
+                                .frame(width: 28.0, height: 28.0).foregroundColor(Color.text_primary_color)
                         }
-                    ExpenseMainView(filter: filter)
-                        .actionSheet(isPresented: $showOptionsSheet) {
-                            ActionSheet(title: Text("Select an option"), buttons: [
-                                    .default(Text("About")) { self.displayAbout = true },
-                                    .default(Text("Settings")) { self.displaySettings = true },
-                                    .cancel()
-                             ])
+                    }
+                    .padding(16).padding(.top, 30).padding(.horizontal, 8)
+                    .background(Color.secondary_color)
+                    
+                    // Filter pills
+                    HStack(spacing: 8) {
+                        ForEach([("All", ExpenseCDFilterTime.all), ("Week", .week), ("Month", .month)], id: \.0) { label, filter in
+                            Button(action: { expenseFilter = filter }) {
+                                Text(label)
+                                    .modifier(InterFont(.semiBold, size: 13))
+                                    .foregroundColor(expenseFilter == filter ? .white : Color.text_secondary_color)
+                                    .padding(.horizontal, 16).padding(.vertical, 7)
+                                    .background(expenseFilter == filter ? Color.main_color : Color.secondary_color)
+                                    .cornerRadius(20)
+                            }
                         }
-                    Spacer()
-                }.edgesIgnoringSafeArea(.all)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 10)
+                    
+                    // Main scrollable content
+                    ExpenseMainView(filter: expenseFilter)
+                        .environmentObject(themeManager)
+                        .environmentObject(exchangeService)
+                    
+                }
                 
+                // FAB
                 VStack {
                     Spacer()
                     HStack {
                         Spacer()
-                        NavigationLink(destination: NavigationLazyView(AddExpenseView(viewModel: AddExpenseViewModel())),
-                                       label: { Image("plus_icon").resizable().frame(width: 32.0, height: 32.0) })
-                        .padding().background(Color.main_color).cornerRadius(35)
-                        .scaleEffect(isAnimatingFAB ? 1.06 : 1.0)
-                        .offset(y: isAnimatingFAB ? -4 : 0)
-                        .shadow(color: Color.main_color.opacity(isAnimatingFAB ? 0.45 : 0.2), radius: isAnimatingFAB ? 10 : 5, x: 0, y: isAnimatingFAB ? 6 : 3)
-                        .onAppear {
-                            withAnimation(Animation.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
-                                isAnimatingFAB = true
-                            }
+                        Button(action: {
+                            showAddExpense = true
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) { isAnimatingFAB = true }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { isAnimatingFAB = false }
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(width: 60, height: 60)
+                                .background(Color.main_color)
+                                .cornerRadius(30)
+                                .shadow(color: Color.main_color.opacity(0.45), radius: 12, x: 0, y: 6)
+                                .scaleEffect(isAnimatingFAB ? 1.15 : 1.0)
                         }
-                    }
-                }.padding()
+                    }.padding(24)
+                }
+                
             }
             .navigationBarHidden(true)
+            .sheet(isPresented: $showAddExpense) {
+                AddExpenseView(viewModel: AddExpenseViewModel())
+                    .environment(\.managedObjectContext, managedObjectContext)
+                    .environmentObject(themeManager)
+            }
+            .sheet(isPresented: $showFilter) {
+                ExpenseFilterView()
+                    .environment(\.managedObjectContext, managedObjectContext)
+                    .environmentObject(themeManager)
+                    .environmentObject(exchangeService)
+            }
+            .sheet(isPresented: $showSettings) {
+                ExpenseSettingsView()
+                    .environment(\.managedObjectContext, managedObjectContext)
+                    .environmentObject(themeManager)
+                    .environmentObject(exchangeService)
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
-        .preferredColorScheme(isDarkMode ? .dark : .light)
+        .preferredColorScheme(themeManager.isDarkMode ? .dark : .light)
     }
 }
+
+// MARK: - Main scrollable dashboard body
 
 struct ExpenseMainView: View {
     
     var filter: ExpenseCDFilterTime
     var fetchRequest: FetchRequest<ExpenseCD>
     var expense: FetchedResults<ExpenseCD> { fetchRequest.wrappedValue }
-    @AppStorage(UD_EXPENSE_CURRENCY) var CURRENCY: String = ""
-    @AppStorage("isDarkMode") var isDarkMode = true
+    
+    @AppStorage(UD_DISPLAY_CURRENCY) var displayCurrency: String = "INR"
+    @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var exchangeService: ExchangeRateService
     
     @State private var animateHeader = false
     @State private var animateItems = false
     
     init(filter: ExpenseCDFilterTime) {
-        let sortDescriptor = NSSortDescriptor(key: "occuredOn", ascending: false)
+        let sort = NSSortDescriptor(key: "occuredOn", ascending: false)
         self.filter = filter
         if filter == .all {
-            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sortDescriptor])
+            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort])
         } else {
             var startDate: NSDate!
-            let endDate: NSDate = NSDate()
+            let endDate = NSDate()
             if filter == .week { startDate = Date().getLast7Day()! as NSDate }
             else if filter == .month { startDate = Date().getLast30Day()! as NSDate }
             else { startDate = Date().getLast6Month()! as NSDate }
             let predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@", startDate, endDate)
-            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sortDescriptor], predicate: predicate)
+            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort], predicate: predicate)
         }
     }
     
-    private func getTotalBalance() -> String {
-        var value = Double(0)
-        for i in expense {
-            if i.type == TRANS_TYPE_INCOME { value += i.amount }
-            else if i.type == TRANS_TYPE_EXPENSE { value -= i.amount }
+    private func totalBalance() -> Double {
+        expense.reduce(0.0) { acc, tx in
+            let converted = exchangeService.convertedAmount(tx.amount, from: tx.resolvedCurrencyCode, to: displayCurrency)
+            return tx.type == TRANS_TYPE_INCOME ? acc + converted : acc - converted
         }
-        return "\(String(format: "%.2f", value))"
     }
     
     var body: some View {
-        
         ScrollView(showsIndicators: false) {
-            
-            if fetchRequest.wrappedValue.isEmpty {
+            if expense.isEmpty {
                 LottieView(animType: .empty_face).frame(width: 300, height: 300)
                 VStack {
                     TextView(text: "No Transaction Yet!", type: .h6).foregroundColor(Color.text_primary_color)
-                    TextView(text: "Add a transaction and it will show up here", type: .body_1).foregroundColor(Color.text_secondary_color).padding(.top, 2)
+                    TextView(text: "Add a transaction and it will show up here", type: .body_1)
+                        .foregroundColor(Color.text_secondary_color).padding(.top, 2)
                 }.padding(.horizontal)
             } else {
-                VStack(spacing: 8) {
-                    TextView(text: "TOTAL BALANCE", type: .overline)
-                        .foregroundColor(Color.text_secondary_color)
-                        .padding(.top, 24)
-                    TextView(text: "\(CURRENCY)\(getTotalBalance())", type: .h5)
-                        .foregroundColor(Color.text_primary_color)
-                        .padding(.bottom, 24)
+                VStack(spacing: 10) {
+                    
+                    // ── Total Balance Card ──
+                    VStack(spacing: 4) {
+                        TextView(text: "TOTAL BALANCE", type: .overline)
+                            .foregroundColor(Color.text_secondary_color)
+                            .padding(.top, 20)
+                        CurrencyAmountView.forHero(amount: totalBalance(), currencyCode: displayCurrency)
+                            .padding(.bottom, 4)
+                        // Offline rates notice
+                        if exchangeService.isUsingCachedRates, let _ = exchangeService.lastUpdated {
+                            HStack(spacing: 4) {
+                                Image(systemName: "wifi.slash")
+                                    .font(.system(size: 10))
+                                Text(exchangeService.lastUpdatedLabel)
+                                    .font(.system(size: 10))
+                            }
+                            .foregroundColor(Color.text_secondary_color.opacity(0.7))
+                            .padding(.bottom, 8)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .background(Color.secondary_color)
+                    .cornerRadius(16)
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.main_color.opacity(0.15), lineWidth: 1))
+                    .offset(y: animateHeader ? 0 : -20)
+                    .opacity(animateHeader ? 1 : 0)
+                    
+                    // ── Income / Expense Cards ──
+                    HStack(spacing: 10) {
+                        ExpenseSummaryCard(isIncome: true, filter: filter)
+                            .environmentObject(exchangeService)
+                        ExpenseSummaryCard(isIncome: false, filter: filter)
+                            .environmentObject(exchangeService)
+                    }
+                    .offset(y: animateHeader ? 0 : -10)
+                    .opacity(animateHeader ? 1 : 0)
+                    
+                    // ── Recent Transactions ──
+                    HStack {
+                        TextView(text: "Recent Transaction", type: .subtitle_1).foregroundColor(Color.text_primary_color)
+                        Spacer()
+                    }.padding(4)
+                    
+                    ForEach(expense) { expenseObj in
+                        let index = expense.firstIndex(of: expenseObj) ?? 0
+                        NavigationLink(
+                            destination: ExpenseDetailedView(expenseObj: expenseObj)
+                                .environmentObject(exchangeService),
+                            label: {
+                                ExpenseTransView(expenseObj: expenseObj)
+                                    .environmentObject(exchangeService)
+                                    .offset(y: animateItems ? 0 : 40)
+                                    .opacity(animateItems ? 1 : 0)
+                                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(Double(index) * 0.04 + 0.25), value: animateItems)
+                            }
+                        )
+                    }
                 }
-                .frame(maxWidth: .infinity)
-                .background(Color.secondary_color)
-                .cornerRadius(16)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.main_color.opacity(0.15), lineWidth: 1)
-                )
-                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-                .offset(y: animateHeader ? 0 : 30)
-                .opacity(animateHeader ? 1 : 0)
-                .animation(.spring(response: 0.6, dampingFraction: 0.8), value: animateHeader)
-                
-                HStack(spacing: 8) {
-                    NavigationLink(destination: NavigationLazyView(ExpenseFilterView(isIncome: true)),
-                                   label: { ExpenseModelView(isIncome: true, filter: filter) })
-                    NavigationLink(destination: NavigationLazyView(ExpenseFilterView(isIncome: false)),
-                                   label: { ExpenseModelView(isIncome: false, filter: filter) })
-                }
-                .frame(maxWidth: .infinity)
-                .offset(y: animateHeader ? 0 : 30)
-                .opacity(animateHeader ? 1 : 0)
-                .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.12), value: animateHeader)
-                
-                Spacer().frame(height: 16)
-                
-                HStack {
-                    TextView(text: "Recent Transaction", type: .subtitle_1).foregroundColor(Color.text_primary_color)
-                    Spacer()
-                }.padding(4)
-                
-                ForEach(self.fetchRequest.wrappedValue) { expenseObj in
-                    let index = self.fetchRequest.wrappedValue.firstIndex(of: expenseObj) ?? 0
-                    NavigationLink(destination: ExpenseDetailedView(expenseObj: expenseObj), label: {
-                        ExpenseTransView(expenseObj: expenseObj)
-                            .offset(y: animateItems ? 0 : 40)
-                            .opacity(animateItems ? 1 : 0)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(Double(index) * 0.04 + 0.25), value: animateItems)
-                    })
-                }
+                Spacer().frame(height: 120)
             }
-            
-            Spacer().frame(height: 150)
-            
         }
-        .padding(.horizontal, 8).padding(.top, 0)
+        .padding(.horizontal, 8)
         .onAppear {
-            withAnimation {
-                animateHeader = true
-                animateItems = true
-            }
+            withAnimation { animateHeader = true; animateItems = true }
+        }
+        .ifAvailableRefreshable {
+            exchangeService.refresh()
         }
     }
 }
 
-struct ExpenseModelView: View {
+extension View {
+    @ViewBuilder
+    func ifAvailableRefreshable(action: @escaping () -> Void) -> some View {
+        if #available(iOS 15.0, *) {
+            self.refreshable { action() }
+        } else {
+            self
+        }
+    }
+}
+
+// MARK: - Summary Card (Income or Expense total)
+
+struct ExpenseSummaryCard: View {
     
     var isIncome: Bool
-    var type: String
+    var filter: ExpenseCDFilterTime
     var fetchRequest: FetchRequest<ExpenseCD>
     var expense: FetchedResults<ExpenseCD> { fetchRequest.wrappedValue }
-    @AppStorage(UD_EXPENSE_CURRENCY) var CURRENCY: String = ""
-    @AppStorage("isDarkMode") var isDarkMode = true
     
-    private func getTotalValue() -> String {
-        var value = Double(0)
-        for i in expense { value += i.amount }
-        return "\(String(format: "%.2f", value))"
-    }
+    @AppStorage(UD_DISPLAY_CURRENCY) var displayCurrency: String = "INR"
+    @EnvironmentObject var exchangeService: ExchangeRateService
     
-    init(isIncome: Bool, filter: ExpenseCDFilterTime, categTag: String? = nil) {
+    private let type: String
+    
+    init(isIncome: Bool, filter: ExpenseCDFilterTime) {
         self.isIncome = isIncome
+        self.filter = filter
         self.type = isIncome ? TRANS_TYPE_INCOME : TRANS_TYPE_EXPENSE
-        let sortDescriptor = NSSortDescriptor(key: "occuredOn", ascending: false)
+        let sort = NSSortDescriptor(key: "occuredOn", ascending: false)
         if filter == .all {
-            var predicate: NSPredicate!
-            if let tag = categTag {
-                predicate = NSPredicate(format: "type == %@ AND tag == %@", type, tag)
-            } else { predicate = NSPredicate(format: "type == %@", type) }
-            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sortDescriptor], predicate: predicate)
+            let predicate = NSPredicate(format: "type == %@", type)
+            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort], predicate: predicate)
         } else {
             var startDate: NSDate!
-            let endDate: NSDate = NSDate()
+            let endDate = NSDate()
             if filter == .week { startDate = Date().getLast7Day()! as NSDate }
             else if filter == .month { startDate = Date().getLast30Day()! as NSDate }
             else { startDate = Date().getLast6Month()! as NSDate }
-            var predicate: NSPredicate!
-            if let tag = categTag {
-                predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@ AND type == %@ AND tag == %@", startDate, endDate, type, tag)
-            } else { predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@ AND type == %@", startDate, endDate, type) }
-            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sortDescriptor], predicate: predicate)
+            let predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@ AND type == %@", startDate, endDate, type)
+            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort], predicate: predicate)
+        }
+    }
+    
+    private func total() -> Double {
+        expense.reduce(0.0) { acc, tx in
+            acc + exchangeService.convertedAmount(tx.amount, from: tx.resolvedCurrencyCode, to: displayCurrency)
         }
     }
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack {
             VStack(alignment: .leading, spacing: 4) {
                 TextView(text: isIncome ? "INCOME" : "EXPENSE", type: .overline)
                     .foregroundColor(Color.text_secondary_color)
-                TextView(text: "\(CURRENCY)\(getTotalValue())", type: .subtitle_1, lineLimit: 1)
-                    .foregroundColor(Color.text_primary_color)
+                CurrencyAmountView.forSummaryCard(amount: total(), currencyCode: displayCurrency, isIncome: isIncome)
             }
             Spacer()
             ZStack {
                 Circle()
-                    .fill(isIncome ? Color.main_green.opacity(0.15) : Color.main_red.opacity(0.15))
-                    .frame(width: 36, height: 36)
-                Image(systemName: isIncome ? "arrow.down" : "arrow.up")
-                    .font(.system(size: 14, weight: .bold))
+                    .fill(isIncome ? Color.main_green.opacity(0.18) : Color.main_red.opacity(0.18))
+                    .frame(width: 44, height: 44)
+                Image(systemName: isIncome ? "arrow.down.circle.fill" : "arrow.up.circle.fill")
+                    .font(.system(size: 22))
                     .foregroundColor(isIncome ? Color.main_green : Color.main_red)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 20)
+        .padding(14)
+        .frame(maxWidth: .infinity)
         .background(Color.secondary_color)
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
+        .cornerRadius(14)
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.main_color.opacity(0.1), lineWidth: 1))
     }
 }
+
+// MARK: - Transaction row
 
 struct ExpenseTransView: View {
     
-    @ObservedObject var expenseObj: ExpenseCD
-    @AppStorage(UD_EXPENSE_CURRENCY) var CURRENCY: String = ""
-    @AppStorage("isDarkMode") var isDarkMode = true
+    var expenseObj: ExpenseCD
+    @AppStorage(UD_DISPLAY_CURRENCY) var displayCurrency: String = "INR"
+    @EnvironmentObject var exchangeService: ExchangeRateService
     
     var body: some View {
-        HStack {
+        let isIncome = expenseObj.type == TRANS_TYPE_INCOME
+        let convertedAmt = exchangeService.convertedAmount(expenseObj.amount, from: expenseObj.resolvedCurrencyCode, to: displayCurrency)
+        
+        HStack(spacing: 12) {
+            // Category icon
+            Image(getTransTagIcon(transTag: expenseObj.tag ?? ""))
+                .resizable().scaledToFit()
+                .frame(width: 32, height: 32)
+                .padding(10)
+                .background(Color.main_color.opacity(0.12))
+                .cornerRadius(12)
             
-            NavigationLink(destination: NavigationLazyView(ExpenseFilterView(categTag: expenseObj.tag)), label: {
-                Image(getTransTagIcon(transTag: expenseObj.tag ?? ""))
-                    .renderingMode(.template)
-                    .resizable().frame(width: 24, height: 24).padding(16)
-                    .foregroundColor(Color.main_color)
-                    .background(Color.primary_color).cornerRadius(8)
-            })
-            
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    TextView(text: expenseObj.title ?? "", type: .subtitle_1, lineLimit: 1).foregroundColor(Color.text_primary_color)
-                    Spacer()
-                    TextView(text: "\(expenseObj.type == TRANS_TYPE_INCOME ? "+" : "-")\(CURRENCY)\(expenseObj.amount)", type: .subtitle_1)
-                        .foregroundColor(expenseObj.type == TRANS_TYPE_INCOME ? Color.main_green : Color.main_red)
-                }
-                HStack {
-                    TextView(text: getTransTagTitle(transTag: expenseObj.tag ?? ""), type: .body_2).foregroundColor(Color.text_primary_color)
-                    Spacer()
-                    TextView(text: getDateFormatter(date: expenseObj.occuredOn, format: "MMM dd, yyyy"), type: .body_2).foregroundColor(Color.text_primary_color)
-                }
-            }.padding(.leading, 4)
+            VStack(alignment: .leading, spacing: 2) {
+                TextView(text: expenseObj.title ?? "", type: .subtitle_1, lineLimit: 1)
+                    .foregroundColor(Color.text_primary_color)
+                TextView(text: getTransTagTitle(transTag: expenseObj.tag ?? ""), type: .body_2)
+                    .foregroundColor(Color.text_secondary_color)
+            }
             
             Spacer()
             
+            VStack(alignment: .trailing, spacing: 2) {
+                CurrencyAmountView.forTransaction(amount: convertedAmt, currencyCode: displayCurrency, isIncome: isIncome)
+                Text(getDateFormatter(date: expenseObj.occuredOn, format: "MMM d, yyyy"))
+                    .modifier(InterFont(.regular, size: 11))
+                    .foregroundColor(Color.text_secondary_color)
+                // Show original currency badge if different from display
+                if expenseObj.resolvedCurrencyCode != displayCurrency {
+                    Text("(\(symbolFor(currencyCode: expenseObj.resolvedCurrencyCode))\(String(format: "%.0f", expenseObj.amount)) \(expenseObj.resolvedCurrencyCode))")
+                        .modifier(InterFont(.regular, size: 10))
+                        .foregroundColor(Color.text_secondary_color.opacity(0.65))
+                }
+            }
         }
-        .padding(8)
+        .padding(12)
         .background(Color.secondary_color)
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
+        .cornerRadius(14)
     }
 }
-
-struct ExpenseView_Previews: PreviewProvider {
-    static var previews: some View {
-        ExpenseView()
-    }
-}
- 
- 
- 
- 
- 
- 

@@ -26,7 +26,7 @@ struct ToolbarModelView: View {
     var button1Method: (() -> ())?
     var button2Method: (() -> ())?
     
-    @AppStorage("isDarkMode") var isDarkMode = true
+    @EnvironmentObject var themeManager: ThemeManager
     
     var body: some View {
         ZStack {
@@ -37,11 +37,9 @@ struct ToolbarModelView: View {
                 }
                 Spacer()
                 Button(action: {
-                    withAnimation {
-                        isDarkMode.toggle()
-                    }
+                    themeManager.toggle()
                 }, label: {
-                    Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
+                    Image(systemName: themeManager.isDarkMode ? "sun.max.fill" : "moon.fill")
                         .renderingMode(.template)
                         .resizable()
                         .frame(width: 22.0, height: 22.0)
@@ -63,6 +61,7 @@ struct ToolbarModelView: View {
         }.padding(16).padding(.top, 30).padding(.horizontal, 8).background(Color.secondary_color)
     }
 }
+
  
  
  

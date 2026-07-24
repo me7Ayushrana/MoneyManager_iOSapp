@@ -24,7 +24,11 @@ class AddExpenseViewModel: ObservableObject {
     @Published var selectedType = TRANS_TYPE_INCOME
     @Published var selectedTag = TRANS_TAG_TRANSPORT
     
-    @Published var imageUpdated = false // When transaction edit, check if attachment is updated?
+    /// ISO currency code for this transaction — defaults to user's Display Currency
+    @Published var selectedCurrencyCode: String = UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) ?? "INR"
+    @Published var showCurrencyPicker = false
+    
+    @Published var imageUpdated = false
     @Published var imageAttached: UIImage? = nil
     
     @Published var alertMsg = String()
@@ -38,9 +42,12 @@ class AddExpenseViewModel: ObservableObject {
         if let expenseObj = expenseObj {
             self.amount = String(expenseObj.amount)
             self.typeTitle = expenseObj.type == TRANS_TYPE_INCOME ? "Income" : "Expense"
+            // Load saved currency, or fall back to Display Currency
+            self.selectedCurrencyCode = expenseObj.resolvedCurrencyCode
         } else {
             self.amount = ""
             self.typeTitle = "Income"
+            self.selectedCurrencyCode = UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) ?? "INR"
         }
         self.occuredOn = expenseObj?.occuredOn ?? Date()
         self.note = expenseObj?.note ?? ""
@@ -63,6 +70,11 @@ class AddExpenseViewModel: ObservableObject {
         else { return "\(expenseObj == nil ? "ADD" : "EDIT") TRANSACTION" }
     }
     
+    /// Short display label for the currently selected currency, e.g. "₹ INR"
+    var currencyDisplayLabel: String {
+        supportedCurrency(for: selectedCurrencyCode)?.shortLabel ?? selectedCurrencyCode
+    }
+    
     func attachImage() { AttachmentHandler.shared.showAttachmentActionSheet() }
     
     func removeImage() { imageAttached = nil }
@@ -73,45 +85,27 @@ class AddExpenseViewModel: ObservableObject {
         let titleStr = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let amountStr = amount.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        if titleStr.isEmpty || titleStr == "" {
-            alertMsg = "Enter Title"; showAlert = true
-            return
+        if titleStr.isEmpty { alertMsg = "Enter Title"; showAlert = true; return }
+        if amountStr.isEmpty { alertMsg = "Enter Amount"; showAlert = true; return }
+        guard let amountVal = Double(amountStr) else {
+            alertMsg = "Enter valid number"; showAlert = true; return
         }
-        if amountStr.isEmpty || amountStr == "" {
-            alertMsg = "Enter Amount"; showAlert = true
-            return
+        guard amountVal >= 0 else {
+            alertMsg = "Amount can't be negative"; showAlert = true; return
         }
-        guard let amount = Double(amountStr) else {
-            alertMsg = "Enter valid number"; showAlert = true
-            return
-        }
-        guard amount >= 0 else {
-            alertMsg = "Amount can't be negative"; showAlert = true
-            return
-        }
-        guard amount <= 1000000000 else {
-            alertMsg = "Enter a smaller amount"; showAlert = true
-            return
+        guard amountVal <= 1_000_000_000 else {
+            alertMsg = "Enter a smaller amount"; showAlert = true; return
         }
         
         if expenseObj != nil {
-            
             expense = expenseObj!
-            
             if let image = imageAttached {
                 if imageUpdated {
-                    if let _ = expense.imageAttached {
-                        // Delete Previous Image from CoreData
-                    }
                     expense.imageAttached = image.jpegData(compressionQuality: 1.0)
                 }
             } else {
-                if let _ = expense.imageAttached {
-                    // Delete Previous Image from CoreData
-                }
                 expense.imageAttached = nil
             }
-            
         } else {
             expense = ExpenseCD(context: managedObjectContext)
             expense.createdAt = Date()
@@ -125,7 +119,8 @@ class AddExpenseViewModel: ObservableObject {
         expense.tag = selectedTag
         expense.occuredOn = occuredOn
         expense.note = note
-        expense.amount = amount
+        expense.amount = amountVal
+        expense.currencyCode = selectedCurrencyCode   // ← NEW: save original currency
         do {
             try managedObjectContext.save()
             closePresenter = true

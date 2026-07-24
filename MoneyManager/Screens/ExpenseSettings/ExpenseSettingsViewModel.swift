@@ -10,13 +10,13 @@ import Combine
 import CoreData
 import LocalAuthentication
 
+@MainActor
 class ExpenseSettingsViewModel: ObservableObject {
     
     var csvModelArr = [ExpenseCSVModel]()
-    
     var cancellableBiometricTask: AnyCancellable? = nil
     
-    @Published var currency = UserDefaults.standard.string(forKey: UD_EXPENSE_CURRENCY) ?? ""
+    @Published var displayCurrency = UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) ?? "INR"
     @Published var enableBiometric = UserDefaults.standard.bool(forKey: UD_USE_BIOMETRIC) {
         didSet {
             if enableBiometric { authenticate() }
@@ -62,25 +62,28 @@ class ExpenseSettingsViewModel: ObservableObject {
         return "App Lock"
     }
     
-    func saveCurrency(currency: String) {
-        self.currency = currency
-        UserDefaults.standard.set(currency, forKey: UD_EXPENSE_CURRENCY)
+    func saveDisplayCurrency(code: String) {
+        self.displayCurrency = code
+        UserDefaults.standard.set(code, forKey: UD_DISPLAY_CURRENCY)
     }
     
-    func exportTransactions(moc: NSManagedObjectContext) {
+    func exportTransactions(moc: NSManagedObjectContext, exchangeService: ExchangeRateService) {
         let request = ExpenseCD.fetchRequest()
         var results: [ExpenseCD]
         do {
             results = try moc.fetch(request) as! [ExpenseCD]
             if results.count <= 0 { alertMsg = "No data to export"; showAlert = true }
             else {
+                csvModelArr.removeAll()
                 for i in results {
                     let csvModel = ExpenseCSVModel()
                     csvModel.title = i.title ?? ""
-                    csvModel.amount = "\(currency)\(i.amount)"
+                    let originalCode = i.resolvedCurrencyCode
+                    let converted = exchangeService.convertedAmount(i.amount, from: originalCode, to: displayCurrency)
+                    csvModel.amount = "\(symbolFor(currencyCode: displayCurrency))\(String(format: "%.2f", converted)) (\(symbolFor(currencyCode: originalCode))\(i.amount) \(originalCode))"
                     csvModel.transactionType = "\(i.type == TRANS_TYPE_INCOME ? "INCOME" : "EXPENSE")"
                     csvModel.tag = getTransTagTitle(transTag: i.tag ?? "")
-                    csvModel.occuredOn = "\(getDateFormatter(date: i.occuredOn, format: "yyyy-mm-dd hh:mm a"))"
+                    csvModel.occuredOn = "\(getDateFormatter(date: i.occuredOn, format: "yyyy-MM-dd hh:mm a"))"
                     csvModel.note = i.note ?? ""
                     csvModelArr.append(csvModel)
                 }
@@ -90,10 +93,9 @@ class ExpenseSettingsViewModel: ObservableObject {
     }
     
     func generateCSV() {
-        
         let fileName = "Expense.csv"
         let path = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
-        var csvText = "Title,Amount,Type,Tag,Occured On,Note\n"
+        var csvText = "Title,Amount (Converted & Original),Type,Tag,Occured On,Note\n"
         
         for csvModel in csvModelArr {
             let row = "\"\(csvModel.title)\",\"\(csvModel.amount)\",\"\(csvModel.transactionType)\",\"\(csvModel.tag)\",\"\(csvModel.occuredOn)\",\"\(csvModel.note)\"\n"
@@ -105,8 +107,6 @@ class ExpenseSettingsViewModel: ObservableObject {
             let av = UIActivityViewController(activityItems: [path!], applicationActivities: nil)
             UIApplication.shared.windows.first?.rootViewController?.present(av, animated: true, completion: nil)
         } catch { alertMsg = "\(error)"; showAlert = true }
-        
-        print(path ?? "not found")
     }
     
     deinit {

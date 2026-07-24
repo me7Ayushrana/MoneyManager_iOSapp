@@ -6,66 +6,90 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct ExpenseFilterView: View {
     
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    // CoreData
     @Environment(\.managedObjectContext) var managedObjectContext
-    @FetchRequest(fetchRequest: ExpenseCD.getAllExpenseData(sortBy: ExpenseCDSort.occuredOn, ascending: false)) var expense: FetchedResults<ExpenseCD>
+    @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var exchangeService: ExchangeRateService
+    @EnvironmentObject var budgetManager: BudgetManager
     
-    @State var filter: ExpenseCDFilterTime = .all
-    @State var showingSheet = false
-    var isIncome: Bool?
-    var categTag: String?
+    @AppStorage(UD_DISPLAY_CURRENCY) var displayCurrency: String = "INR"
     
-    init(isIncome: Bool? = nil, categTag: String? = nil) {
-        self.isIncome = isIncome
-        self.categTag = categTag
-    }
-    
-    func getToolbarTitle() -> String {
-        if let isIncome = isIncome {
-            return isIncome ? "Income" : "Expense"
-        } else if let tag = categTag { return getTransTagTitle(transTag: tag) }
-        return "Dashboard"
-    }
+    @State private var filterType: ExpenseCDFilterTime = .all
+    @State private var transType = TRANS_TYPE_EXPENSE
+    @State private var selectedCategory: String? = nil
     
     var body: some View {
         NavigationView {
             ZStack {
                 Color.primary_color.edgesIgnoringSafeArea(.all)
                 
-                VStack {
-                    ToolbarModelView(title: getToolbarTitle(), button1Icon: IMAGE_FILTER_ICON) { self.presentationMode.wrappedValue.dismiss() }
-                        button1Method: { self.showingSheet = true }
-                        .actionSheet(isPresented: $showingSheet) {
-                            ActionSheet(title: Text("Select a filter"), buttons: [
-                                    .default(Text("Overall")) { filter = .all },
-                                    .default(Text("Last 7 days")) { filter = .week },
-                                    .default(Text("Last 30 days")) { filter = .month },
-                                    .cancel()
-                            ])
-                        }
+                VStack(spacing: 0) {
+                    ToolbarModelView(title: "Filter & Insights") { self.presentationMode.wrappedValue.dismiss() }
                     
                     ScrollView(showsIndicators: false) {
-                        if let isIncome = isIncome {
-                            ExpenseFilterChartView(isIncome: isIncome, filter: filter).frame(width: 350, height: 350)
-                            ExpenseFilterTransList(isIncome: isIncome, filter: filter)
-                        }
-                        if let tag = categTag {
+                        VStack(spacing: 16) {
+                            
+                            // Income / Expense type toggle
+                            HStack(spacing: 12) {
+                                Button(action: { transType = TRANS_TYPE_EXPENSE }) {
+                                    HStack {
+                                        Spacer()
+                                        Text("Expenses")
+                                            .modifier(InterFont(.semiBold, size: 14))
+                                            .foregroundColor(transType == TRANS_TYPE_EXPENSE ? .white : Color.text_secondary_color)
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 10)
+                                    .background(transType == TRANS_TYPE_EXPENSE ? Color.main_red : Color.secondary_color)
+                                    .cornerRadius(10)
+                                }
+                                
+                                Button(action: { transType = TRANS_TYPE_INCOME }) {
+                                    HStack {
+                                        Spacer()
+                                        Text("Income")
+                                            .modifier(InterFont(.semiBold, size: 14))
+                                            .foregroundColor(transType == TRANS_TYPE_INCOME ? .white : Color.text_secondary_color)
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 10)
+                                    .background(transType == TRANS_TYPE_INCOME ? Color.main_green : Color.secondary_color)
+                                    .cornerRadius(10)
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            
+                            // Time frame pills
                             HStack(spacing: 8) {
-                                ExpenseModelView(isIncome: true, filter: filter, categTag: tag)
-                                ExpenseModelView(isIncome: false, filter: filter, categTag: tag)
-                            }.frame(maxWidth: .infinity)
-                            ExpenseFilterTransList(filter: filter, tag: tag)
+                                ForEach([("All", ExpenseCDFilterTime.all), ("Week", .week), ("Month", .month)], id: \.0) { label, filter in
+                                    Button(action: { filterType = filter }) {
+                                        Text(label)
+                                            .modifier(InterFont(.semiBold, size: 13))
+                                            .foregroundColor(filterType == filter ? .white : Color.text_secondary_color)
+                                            .padding(.horizontal, 16).padding(.vertical, 7)
+                                            .background(filterType == filter ? Color.main_color : Color.secondary_color)
+                                            .cornerRadius(20)
+                                    }
+                                }
+                                Spacer()
+                            }
+                            .padding(.horizontal, 12)
+                            
+                            // Filter Content (Chart + Transactions)
+                            ExpenseFilterContentView(filterType: filterType, isIncome: transType == TRANS_TYPE_INCOME, selectedCategory: selectedCategory)
+                                .environmentObject(exchangeService)
+                                .environmentObject(budgetManager)
+                            
+                            Spacer().frame(height: 50)
                         }
-                        Spacer().frame(height: 150)
-                    }.padding(.horizontal, 8).padding(.top, 0)
-                    
-                    Spacer()
-                    
-                }.edgesIgnoringSafeArea(.all)
+                        .padding(.top, 12)
+                    }
+                }
+                .edgesIgnoringSafeArea(.top)
             }
             .navigationBarHidden(true)
         }
@@ -75,130 +99,131 @@ struct ExpenseFilterView: View {
     }
 }
 
-struct ExpenseFilterChartView: View {
+struct ExpenseFilterContentView: View {
     
+    var filterType: ExpenseCDFilterTime
     var isIncome: Bool
-    var type: String
+    var selectedCategory: String?
+    
     var fetchRequest: FetchRequest<ExpenseCD>
     var expense: FetchedResults<ExpenseCD> { fetchRequest.wrappedValue }
-    @AppStorage(UD_EXPENSE_CURRENCY) var CURRENCY: String = ""
+    
+    @AppStorage(UD_DISPLAY_CURRENCY) var displayCurrency: String = "INR"
+    @EnvironmentObject var exchangeService: ExchangeRateService
+    @EnvironmentObject var budgetManager: BudgetManager
+    
     @State private var animateChart = false
     
-    private func getTotalValue() -> String {
-        var value = Double(0)
-        for i in expense { value += i.amount }
-        return "\(String(format: "%.2f", value))"
+    init(filterType: ExpenseCDFilterTime, isIncome: Bool, selectedCategory: String? = nil) {
+        self.filterType = filterType
+        self.isIncome = isIncome
+        self.selectedCategory = selectedCategory
+        
+        let type = isIncome ? TRANS_TYPE_INCOME : TRANS_TYPE_EXPENSE
+        let sortDescriptor = NSSortDescriptor(key: "occuredOn", ascending: false)
+        
+        if filterType == .all {
+            var predicate: NSPredicate
+            if let cat = selectedCategory {
+                predicate = NSPredicate(format: "type == %@ AND tag == %@", type, cat)
+            } else {
+                predicate = NSPredicate(format: "type == %@", type)
+            }
+            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sortDescriptor], predicate: predicate)
+        } else {
+            var startDate: NSDate!
+            let endDate: NSDate = NSDate()
+            if filterType == .week { startDate = Date().getLast7Day()! as NSDate }
+            else if filterType == .month { startDate = Date().getLast30Day()! as NSDate }
+            else { startDate = Date().getLast6Month()! as NSDate }
+            
+            var predicate: NSPredicate
+            if let cat = selectedCategory {
+                predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@ AND type == %@ AND tag == %@", startDate, endDate, type, cat)
+            } else {
+                predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@ AND type == %@", startDate, endDate, type)
+            }
+            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sortDescriptor], predicate: predicate)
+        }
+    }
+    
+    private func getTotalValue() -> Double {
+        expense.reduce(0.0) { acc, tx in
+            acc + exchangeService.convertedAmount(tx.amount, from: tx.resolvedCurrencyCode, to: displayCurrency)
+        }
     }
     
     private func getChartModel() -> [ChartModel] {
-        
-        var transactions = [String: Double]()
+        var categoryTotals = [String: Double]()
         for i in expense {
-            guard let tag = i.tag else { continue }
-            if let value = transactions[tag] {
-                transactions[tag] = value + i.amount
-            } else { transactions[tag] = i.amount }
+            let converted = exchangeService.convertedAmount(i.amount, from: i.resolvedCurrencyCode, to: displayCurrency)
+            let tag = getTransTagTitle(transTag: i.tag ?? "")
+            categoryTotals[tag, default: 0.0] += converted
         }
-        
-        var models = [ChartModel]()
-        for i in transactions {
-            models.append(ChartModel(transType: getTransTagTitle(transTag: i.key), transAmount: i.value))
-        }
-        return models
-    }
-    
-    init(isIncome: Bool, filter: ExpenseCDFilterTime) {
-        self.isIncome = isIncome
-        self.type = isIncome ? TRANS_TYPE_INCOME : TRANS_TYPE_EXPENSE
-        let sortDescriptor = NSSortDescriptor(key: "occuredOn", ascending: false)
-        if filter == .all {
-            let predicate = NSPredicate(format: "type == %@", type)
-            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sortDescriptor], predicate: predicate)
-        } else {
-            var startDate: NSDate!
-            let endDate: NSDate = NSDate()
-            if filter == .week { startDate = Date().getLast7Day()! as NSDate }
-            else if filter == .month { startDate = Date().getLast30Day()! as NSDate }
-            else { startDate = Date().getLast6Month()! as NSDate }
-            let predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@ AND type == %@", startDate, endDate, type)
-            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sortDescriptor], predicate: predicate)
-        }
+        return categoryTotals.map { ChartModel(transType: $0.key, transAmount: $0.value) }
     }
     
     var body: some View {
-        Group {
+        VStack(spacing: 16) {
+            
+            // If category is selected or viewing expenses, show Category Budget Progress if applicable
+            if let cat = selectedCategory, !isIncome {
+                BudgetProgressView(tag: cat, spentConverted: getTotalValue(), displayCurrency: displayCurrency)
+                    .environmentObject(budgetManager)
+                    .padding(.horizontal, 12)
+            }
+            
+            // Chart Card
             if !expense.isEmpty {
-                ChartView(label: "Total \(isIncome ? "Income" : "Expense") - \(CURRENCY)\(getTotalValue())",
-                          entries: ChartModel.getTransaction(transactions: getChartModel()))
-                .scaleEffect(animateChart ? 1.0 : 0.8)
-                .opacity(animateChart ? 1.0 : 0.0)
-                .animation(.spring(response: 0.6, dampingFraction: 0.75), value: animateChart)
-                .onAppear {
-                    withAnimation {
-                        animateChart = true
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        TextView(text: "Total \(isIncome ? "Income" : "Expense")", type: .overline)
+                            .foregroundColor(Color.text_secondary_color)
+                        Spacer()
+                        CurrencyAmountView(amount: getTotalValue(), currencyCode: displayCurrency, amountType: .subtitle_1, codeType: .caption, color: isIncome ? Color.main_green : Color.main_red)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 14)
+                    
+                    ChartView(label: "", entries: ChartModel.getTransaction(transactions: getChartModel()))
+                        .scaleEffect(animateChart ? 1.0 : 0.8)
+                        .opacity(animateChart ? 1.0 : 0.0)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: animateChart)
+                }
+                .padding(.bottom, 12)
+                .background(Color.secondary_color)
+                .cornerRadius(16)
+                .padding(.horizontal, 12)
+            } else {
+                VStack(spacing: 8) {
+                    LottieView(animType: .empty_face).frame(width: 200, height: 200)
+                    TextView(text: "No Transactions Found", type: .subtitle_1).foregroundColor(Color.text_primary_color)
+                }
+                .padding(.vertical, 30)
+            }
+            
+            // List of Filtered Transactions
+            if !expense.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        TextView(text: "Transactions (\(expense.count))", type: .subtitle_1)
+                            .foregroundColor(Color.text_primary_color)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    
+                    ForEach(expense) { item in
+                        NavigationLink(
+                            destination: ExpenseDetailedView(expenseObj: item).environmentObject(exchangeService),
+                            label: {
+                                ExpenseTransView(expenseObj: item).environmentObject(exchangeService)
+                            }
+                        )
                     }
                 }
+                .padding(.horizontal, 12)
             }
         }
+        .onAppear { animateChart = true }
     }
 }
-
-struct ExpenseFilterTransList: View {
-    
-    var isIncome: Bool?
-    var tag: String?
-    var fetchRequest: FetchRequest<ExpenseCD>
-    var expense: FetchedResults<ExpenseCD> { fetchRequest.wrappedValue }
-    
-    @State private var animateItems = false
-    
-    init(isIncome: Bool? = nil, filter: ExpenseCDFilterTime, tag: String? = nil) {
-        let sortDescriptor = NSSortDescriptor(key: "occuredOn", ascending: false)
-        if filter == .all {
-            let predicate: NSPredicate!
-            if let isIncome = isIncome {
-                predicate = NSPredicate(format: "type == %@", (isIncome ? TRANS_TYPE_INCOME : TRANS_TYPE_EXPENSE))
-            } else if let tag = tag { predicate = NSPredicate(format: "tag == %@", tag) }
-            else { predicate = NSPredicate(format: "occuredOn <= %@", NSDate()) }
-            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sortDescriptor], predicate: predicate)
-        } else {
-            var startDate: NSDate!
-            let endDate: NSDate = NSDate()
-            if filter == .week { startDate = Date().getLast7Day()! as NSDate }
-            else if filter == .month { startDate = Date().getLast30Day()! as NSDate }
-            else { startDate = Date().getLast6Month()! as NSDate }
-            let predicate: NSPredicate!
-            if let isIncome = isIncome {
-                predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@ AND type == %@", startDate, endDate, (isIncome ? TRANS_TYPE_INCOME : TRANS_TYPE_EXPENSE))
-            } else if let tag = tag {
-                predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@ AND tag == %@", startDate, endDate, tag)
-            } else { predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@", startDate, endDate) }
-            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sortDescriptor], predicate: predicate)
-        }
-    }
-    
-    var body: some View {
-        ForEach(self.fetchRequest.wrappedValue) { expenseObj in
-            let index = self.fetchRequest.wrappedValue.firstIndex(of: expenseObj) ?? 0
-            NavigationLink(destination: ExpenseDetailedView(expenseObj: expenseObj), label: {
-                ExpenseTransView(expenseObj: expenseObj)
-                    .offset(y: animateItems ? 0 : 40)
-                    .opacity(animateItems ? 1 : 0)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(Double(index) * 0.04), value: animateItems)
-            })
-        }
-        .onAppear {
-            withAnimation {
-                animateItems = true
-            }
-        }
-    }
-}
-
-struct ExpenseFilterView_Previews: PreviewProvider {
-    static var previews: some View {
-        ExpenseFilterView(isIncome: true)
-    }
-}
- 
- 

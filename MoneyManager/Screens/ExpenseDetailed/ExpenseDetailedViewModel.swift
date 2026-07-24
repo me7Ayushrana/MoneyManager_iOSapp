@@ -30,7 +30,7 @@ class ExpenseDetailedViewModel: ObservableObject {
     func shareNote() {
         let shareStr = """
         Title: \(expenseObj.title ?? "")
-        Amount: \(UserDefaults.standard.string(forKey: UD_EXPENSE_CURRENCY) ?? "")\(expenseObj.amount)
+        Amount: \(currencySymbol(from: UserDefaults.standard.string(forKey: UD_EXPENSE_CURRENCY) ?? ""))\(expenseObj.amount)
         Transaction type: \(expenseObj.type == TRANS_TYPE_INCOME ? "Income" : "Expense")
         Category: \(getTransTagTitle(transTag: expenseObj.tag ?? ""))
         Date: \(getDateFormatter(date: expenseObj.occuredOn, format: "EEEE, dd MMM hh:mm a"))
