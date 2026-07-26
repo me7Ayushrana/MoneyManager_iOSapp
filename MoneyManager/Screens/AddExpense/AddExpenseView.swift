@@ -31,8 +31,8 @@ struct AddExpenseView: View {
         DropdownOption(key: TRANS_TAG_SAVINGS, val: "Savings"),
         DropdownOption(key: TRANS_TAG_PERSONAL, val: "Personal"),
         DropdownOption(key: TRANS_TAG_ENTERTAINMENT, val: "Entertainment"),
-        DropdownOption(key: TRANS_TAG_OTHERS, val: "Others"),
-        DropdownOption(key: TRANS_TAG_UTILITIES, val: "Utilities")
+        DropdownOption(key: TRANS_TAG_UTILITIES, val: "Utilities"),
+        DropdownOption(key: TRANS_TAG_OTHERS, val: "Others")
     ]
     
     var body: some View {
@@ -40,7 +40,7 @@ struct AddExpenseView: View {
             ZStack {
                 Color.primary_color.edgesIgnoringSafeArea(.all)
                 
-                VStack {
+                VStack(spacing: 0) {
                     
                     Group {
                         if viewModel.expenseObj == nil {
@@ -59,7 +59,7 @@ struct AddExpenseView: View {
                                       secondaryButton: .cancel(Text("Cancel"), action: { confirmDelete = false }))
                             })
                     
-                    ScrollView(showsIndicators: false) {
+                    ScrollView(showsIndicators: true) {
                         VStack(spacing: 12) {
                             
                             // Title
@@ -68,15 +68,14 @@ struct AddExpenseView: View {
                                 .accentColor(Color.text_primary_color)
                                 .frame(height: 50).padding(.leading, 16)
                                 .background(Color.secondary_color)
-                                .cornerRadius(4)
+                                .cornerRadius(8)
                             
                             // Amount + currency symbol prefix
                             HStack(spacing: 0) {
-                                // Symbol badge
                                 Text(symbolFor(currencyCode: viewModel.selectedCurrencyCode))
                                     .modifier(InterFont(.semiBold, size: 18))
                                     .foregroundColor(Color.main_color)
-                                    .frame(width: 44, height: 50)
+                                    .frame(width: 48, height: 50)
                                     .background(Color.main_color.opacity(0.12))
                                 
                                 TextField("Amount", text: $viewModel.amount)
@@ -86,22 +85,22 @@ struct AddExpenseView: View {
                                     .keyboardType(.decimalPad)
                             }
                             .background(Color.secondary_color)
-                            .cornerRadius(4)
+                            .cornerRadius(8)
                             
-                            // Currency picker row
-                            Button(action: { viewModel.showCurrencyPicker = true }) {
+                            // Transaction Type Picker Button
+                            Button(action: { viewModel.showTypeDrop = true }) {
                                 HStack {
-                                    Image(systemName: "dollarsign.circle.fill")
+                                    Image(systemName: viewModel.selectedType == TRANS_TYPE_INCOME ? "arrow.down.circle.fill" : "arrow.up.circle.fill")
                                         .font(.system(size: 16, weight: .semibold))
-                                        .foregroundColor(Color.main_color)
+                                        .foregroundColor(viewModel.selectedType == TRANS_TYPE_INCOME ? Color.main_green : Color.main_red)
                                         .padding(.leading, 16)
-                                    TextView(text: "Transaction Currency", type: .button)
+                                    TextView(text: "Type", type: .button)
                                         .foregroundColor(Color.text_secondary_color)
                                     Spacer()
-                                    Text(viewModel.currencyDisplayLabel)
+                                    Text(viewModel.typeTitle)
                                         .modifier(InterFont(.semiBold, size: 14))
-                                        .foregroundColor(Color.main_color)
-                                        .padding(.trailing, 12)
+                                        .foregroundColor(viewModel.selectedType == TRANS_TYPE_INCOME ? Color.main_green : Color.main_red)
+                                        .padding(.trailing, 8)
                                     Image(systemName: "chevron.right")
                                         .font(.system(size: 12, weight: .semibold))
                                         .foregroundColor(Color.text_secondary_color)
@@ -110,7 +109,78 @@ struct AddExpenseView: View {
                             }
                             .frame(height: 50).frame(maxWidth: .infinity)
                             .background(Color.secondary_color)
-                            .cornerRadius(4)
+                            .cornerRadius(8)
+                            .actionSheet(isPresented: $viewModel.showTypeDrop) {
+                                ActionSheet(title: Text("Select Transaction Type"), buttons: [
+                                    .default(Text("Income")) {
+                                        viewModel.typeTitle = "Income"
+                                        viewModel.selectedType = TRANS_TYPE_INCOME
+                                    },
+                                    .default(Text("Expense")) {
+                                        viewModel.typeTitle = "Expense"
+                                        viewModel.selectedType = TRANS_TYPE_EXPENSE
+                                    },
+                                    .cancel()
+                                ])
+                            }
+                            
+                            // Category (Tag) Picker Button
+                            Button(action: { viewModel.showTagDrop = true }) {
+                                HStack {
+                                    Image(getTransTagIcon(transTag: viewModel.selectedTag))
+                                        .resizable().scaledToFit()
+                                        .frame(width: 22, height: 22)
+                                        .padding(.leading, 16)
+                                    TextView(text: "Category", type: .button)
+                                        .foregroundColor(Color.text_secondary_color)
+                                    Spacer()
+                                    Text(viewModel.tagTitle)
+                                        .modifier(InterFont(.semiBold, size: 14))
+                                        .foregroundColor(Color.text_primary_color)
+                                        .padding(.trailing, 8)
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(Color.text_secondary_color)
+                                        .padding(.trailing, 16)
+                                }
+                            }
+                            .frame(height: 50).frame(maxWidth: .infinity)
+                            .background(Color.secondary_color)
+                            .cornerRadius(8)
+                            .actionSheet(isPresented: $viewModel.showTagDrop) {
+                                var buttons: [ActionSheet.Button] = tagOptions.map { option in
+                                    .default(Text(option.val)) {
+                                        viewModel.tagTitle = option.val
+                                        viewModel.selectedTag = option.key
+                                    }
+                                }
+                                buttons.append(.cancel())
+                                return ActionSheet(title: Text("Select Category"), buttons: buttons)
+                            }
+                            
+                            // Currency picker row
+                            Button(action: { viewModel.showCurrencyPicker = true }) {
+                                HStack {
+                                    Image(systemName: "dollarsign.circle.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(Color.main_color)
+                                        .padding(.leading, 16)
+                                    TextView(text: "Currency", type: .button)
+                                        .foregroundColor(Color.text_secondary_color)
+                                    Spacer()
+                                    Text(viewModel.currencyDisplayLabel)
+                                        .modifier(InterFont(.semiBold, size: 14))
+                                        .foregroundColor(Color.main_color)
+                                        .padding(.trailing, 8)
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(Color.text_secondary_color)
+                                        .padding(.trailing, 16)
+                                }
+                            }
+                            .frame(height: 50).frame(maxWidth: .infinity)
+                            .background(Color.secondary_color)
+                            .cornerRadius(8)
                             .actionSheet(isPresented: $viewModel.showCurrencyPicker) {
                                 var buttons: [ActionSheet.Button] = SUPPORTED_CURRENCIES.map { curr in
                                     .default(Text(curr.displayLabel)) { viewModel.selectedCurrencyCode = curr.code }
@@ -119,45 +189,19 @@ struct AddExpenseView: View {
                                 return ActionSheet(title: Text("Transaction Currency"), message: Text("Select the currency this amount is in"), buttons: buttons)
                             }
                             
-                            // Type dropdown
-                            DropdownButton(shouldShowDropdown: $viewModel.showTypeDrop,
-                                           displayText: $viewModel.typeTitle,
-                                           options: typeOptions,
-                                           mainColor: Color.text_primary_color,
-                                           backgroundColor: Color.secondary_color,
-                                           cornerRadius: 4, buttonHeight: 50) { key in
-                                let selected = typeOptions.first { $0.key == key }
-                                if let object = selected {
-                                    viewModel.typeTitle = object.val
-                                    viewModel.selectedType = key
-                                }
-                                viewModel.showTypeDrop = false
-                            }
-                            
-                            // Tag dropdown
-                            DropdownButton(shouldShowDropdown: $viewModel.showTagDrop,
-                                           displayText: $viewModel.tagTitle,
-                                           options: tagOptions,
-                                           mainColor: Color.text_primary_color,
-                                           backgroundColor: Color.secondary_color,
-                                           cornerRadius: 4, buttonHeight: 50) { key in
-                                let selected = tagOptions.first { $0.key == key }
-                                if let object = selected {
-                                    viewModel.tagTitle = object.val
-                                    viewModel.selectedTag = key
-                                }
-                                viewModel.showTagDrop = false
-                            }
-                            
                             // Date picker
                             HStack {
-                                DatePicker("PickerView", selection: $viewModel.occuredOn,
-                                           displayedComponents: [.date, .hourAndMinute]).labelsHidden().padding(.leading, 16)
-                                Spacer()
+                                Image(systemName: "calendar")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(Color.main_color)
+                                    .padding(.leading, 16)
+                                DatePicker("Date & Time", selection: $viewModel.occuredOn,
+                                           displayedComponents: [.date, .hourAndMinute])
+                                    .accentColor(Color.main_color)
+                                    .padding(.trailing, 16)
                             }
                             .frame(height: 50).frame(maxWidth: .infinity)
-                            .accentColor(Color.text_primary_color)
-                            .background(Color.secondary_color).cornerRadius(4)
+                            .background(Color.secondary_color).cornerRadius(8)
                             
                             // Note
                             TextField("Note", text: $viewModel.note)
@@ -165,7 +209,7 @@ struct AddExpenseView: View {
                                 .accentColor(Color.text_primary_color)
                                 .frame(height: 50).padding(.leading, 16)
                                 .background(Color.secondary_color)
-                                .cornerRadius(4)
+                                .cornerRadius(8)
                             
                             // Attachment
                             Button(action: { viewModel.attachImage() }) {
@@ -180,7 +224,7 @@ struct AddExpenseView: View {
                             }
                             .frame(height: 50).frame(maxWidth: .infinity)
                             .background(Color.secondary_color)
-                            .cornerRadius(4)
+                            .cornerRadius(8)
                             .actionSheet(isPresented: $showAttachSheet) {
                                 ActionSheet(title: Text("Do you want to remove the attachment?"), buttons: [
                                     .default(Text("Remove")) { viewModel.removeImage() },
@@ -193,35 +237,41 @@ struct AddExpenseView: View {
                                     Image(uiImage: image)
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(height: 250).frame(maxWidth: .infinity)
+                                        .frame(height: 200).frame(maxWidth: .infinity)
                                         .background(Color.secondary_color)
-                                        .cornerRadius(4)
+                                        .cornerRadius(8)
+                                        .clipped()
                                 }
                             }
                             
-                            Spacer().frame(height: 150)
-                            Spacer()
+                            // Ample bottom spacing so content never gets blocked by the sticky save button
+                            Spacer().frame(height: 140)
                         }
-                        .frame(maxWidth: .infinity).padding(.horizontal, 8)
-                        .alert(isPresented: $viewModel.showAlert,
-                               content: { Alert(title: Text(APP_NAME), message: Text(viewModel.alertMsg), dismissButton: .default(Text("OK"))) })
+                        .padding(.horizontal, 12)
+                        .padding(.top, 12)
+                        .alert(isPresented: $viewModel.showAlert) {
+                            Alert(title: Text(APP_NAME), message: Text(viewModel.alertMsg), dismissButton: .default(Text("OK")))
+                        }
                     }
-                    
-                }.edgesIgnoringSafeArea(.top)
+                }
+                .edgesIgnoringSafeArea(.top)
                 
-                // Save button
+                // Sticky Save Button at Bottom
                 VStack {
                     Spacer()
-                    VStack {
-                        Button(action: { viewModel.saveTransaction(managedObjectContext: managedObjectContext) }) {
-                            HStack {
-                                Spacer()
-                                TextView(text: viewModel.getButtText(), type: .button).foregroundColor(.white)
-                                Spacer()
-                            }
+                    Button(action: { viewModel.saveTransaction(managedObjectContext: managedObjectContext) }) {
+                        HStack {
+                            Spacer()
+                            TextView(text: viewModel.getButtText(), type: .button).foregroundColor(.white)
+                            Spacer()
                         }
-                        .padding(.vertical, 12).background(Color.main_color).cornerRadius(8)
-                    }.padding(.bottom, 16).padding(.horizontal, 8)
+                    }
+                    .padding(.vertical, 14)
+                    .background(Color.main_color)
+                    .cornerRadius(12)
+                    .shadow(color: Color.main_color.opacity(0.4), radius: 8, x: 0, y: 4)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
                 }
             }
             .navigationBarHidden(true)
