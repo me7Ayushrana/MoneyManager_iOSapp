@@ -2,9 +2,8 @@
 //  CurrencyAmountView.swift
 //  MoneyManager
 //
-//  Reusable component that renders a currency symbol/code in a smaller
-//  secondary font alongside the numeric amount in a larger primary font.
-//  Use this everywhere an amount is displayed — never format amounts inline.
+//  Reusable component that renders currency amounts with perfect sign positioning
+//  (e.g., -₹7,777.00 or +₹6,772.69), custom typography, and sign-aware colors.
 //
 
 import SwiftUI
@@ -14,10 +13,10 @@ struct CurrencyAmountView: View {
     var amount: Double
     var currencyCode: String          // ISO code e.g. "USD", "INR"
     var amountType: TextView_Type     // controls size of the number
-    var codeType: TextView_Type       // controls size of the symbol (use .caption or .overline)
-    var color: Color                  // applied to both parts
-    var showOriginal: Bool            // if true, show original; false = converted presentation
-    var prefix: String                // optional prefix: "+", "-", ""
+    var codeType: TextView_Type       // controls size of the symbol
+    var color: Color                  // applied to amount & symbol
+    var showOriginal: Bool            // if true, show original
+    var explicitPrefix: String?       // optional forced prefix: "+", "-", ""
     
     init(amount: Double,
          currencyCode: String,
@@ -25,37 +24,43 @@ struct CurrencyAmountView: View {
          codeType: TextView_Type = .caption,
          color: Color = Color.text_primary_color,
          showOriginal: Bool = true,
-         prefix: String = "") {
+         prefix: String? = nil) {
         self.amount = amount
         self.currencyCode = currencyCode
         self.amountType = amountType
         self.codeType = codeType
         self.color = color
         self.showOriginal = showOriginal
-        self.prefix = prefix
+        self.explicitPrefix = prefix
     }
     
     private var symbol: String { symbolFor(currencyCode: currencyCode) }
     
-    private var amountText: String {
-        let formatted = String(format: "%.2f", abs(amount))
-        return "\(prefix)\(formatted)"
+    /// Sign prefix: "-" if negative, explicitPrefix if provided, or empty
+    private var signPrefix: String {
+        if let p = explicitPrefix { return p }
+        return amount < 0 ? "-" : ""
+    }
+    
+    private var formattedNumber: String {
+        let absVal = abs(amount)
+        return String(format: "%.2f", absVal)
     }
     
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 2) {
-            // Currency symbol — smaller, secondary
-            TextView(text: symbol, type: codeType)
-                .foregroundColor(color.opacity(0.75))
+            // Sign + Symbol — smaller, secondary
+            TextView(text: "\(signPrefix)\(symbol)", type: codeType)
+                .foregroundColor(color.opacity(0.85))
             
             // Numeric amount — larger, primary
-            TextView(text: amountText, type: amountType)
+            TextView(text: formattedNumber, type: amountType)
                 .foregroundColor(color)
         }
     }
 }
 
-// MARK: - Convenience init for transaction rows (income/expense coloring)
+// MARK: - Convenience Initializers
 
 extension CurrencyAmountView {
     /// Creates a sign-coloured CurrencyAmountView for a transaction row.
@@ -72,18 +77,19 @@ extension CurrencyAmountView {
         )
     }
     
-    /// Creates a large hero amount for the dashboard total card.
+    /// Creates a hero amount for the dashboard total balance card with automatic negative red coloring.
     static func forHero(amount: Double, currencyCode: String) -> CurrencyAmountView {
-        CurrencyAmountView(
+        let color: Color = amount < 0 ? Color.main_red : Color.text_primary_color
+        return CurrencyAmountView(
             amount: amount,
             currencyCode: currencyCode,
             amountType: .h5,
             codeType: .subtitle_2,
-            color: Color.text_primary_color
+            color: color
         )
     }
     
-    /// Creates an amount for the income/expense summary cards.
+    /// Creates an amount for income/expense summary cards.
     static func forSummaryCard(amount: Double,
                                currencyCode: String,
                                isIncome: Bool) -> CurrencyAmountView {
