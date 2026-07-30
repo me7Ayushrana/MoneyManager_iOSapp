@@ -8,6 +8,13 @@
 import SwiftUI
 import CoreData
 
+// MARK: - Dashboard Filter Definition
+
+enum DashboardFilterType: Equatable {
+    case quick(ExpenseCDFilterTime) // .all, .week, .month
+    case customMonthYear(month: Int, year: Int)
+}
+
 struct ExpenseView: View {
     
     @Environment(\.managedObjectContext) var managedObjectContext
@@ -19,7 +26,12 @@ struct ExpenseView: View {
     @State private var showAddExpense = false
     @State private var showFilter = false
     @State private var showSettings = false
-    @State private var expenseFilter: ExpenseCDFilterTime = .all
+    
+    // Filter State
+    @State private var activeFilter: DashboardFilterType = .quick(.all)
+    @State private var selectedMonth: Int = Calendar.current.component(.month, from: Date())
+    @State private var selectedYear: Int = Calendar.current.component(.year, from: Date())
+    @State private var showMonthYearPicker = false
     @State private var isAnimatingFAB = false
     
     var body: some View {
@@ -40,7 +52,7 @@ struct ExpenseView: View {
                                 .frame(width: 22.0, height: 22.0)
                                 .foregroundColor(Color.text_primary_color)
                         }.padding(.horizontal, 8)
-                        // Filter
+                        // Filter & Insights
                         Button(action: { showFilter = true }) {
                             Image(IMAGE_FILTER_ICON).renderingMode(.template).resizable()
                                 .frame(width: 28.0, height: 28.0).foregroundColor(Color.text_primary_color)
@@ -54,24 +66,52 @@ struct ExpenseView: View {
                     .padding(16).padding(.top, 30).padding(.horizontal, 8)
                     .background(Color.secondary_color)
                     
-                    // Filter pills
-                    HStack(spacing: 8) {
-                        ForEach([("All", ExpenseCDFilterTime.all), ("Week", .week), ("Month", .month)], id: \.0) { label, filter in
-                            Button(action: { expenseFilter = filter }) {
-                                Text(label)
-                                    .modifier(InterFont(.semiBold, size: 13))
-                                    .foregroundColor(expenseFilter == filter ? .white : Color.text_secondary_color)
-                                    .padding(.horizontal, 16).padding(.vertical, 7)
-                                    .background(expenseFilter == filter ? Color.main_color : Color.secondary_color)
-                                    .cornerRadius(20)
+                    // Filter pills bar (All, Week, Month, Month & Year picker)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            // Quick Filters: All, Week, Month
+                            ForEach([("All", ExpenseCDFilterTime.all), ("Week", .week), ("Month", .month)], id: \.0) { label, filter in
+                                let isSelected = activeFilter == .quick(filter)
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        activeFilter = .quick(filter)
+                                    }
+                                }) {
+                                    Text(label)
+                                        .modifier(InterFont(.semiBold, size: 13))
+                                        .foregroundColor(isSelected ? .white : Color.text_secondary_color)
+                                        .padding(.horizontal, 16).padding(.vertical, 7)
+                                        .background(isSelected ? Color.main_color : Color.secondary_color)
+                                        .cornerRadius(20)
+                                }
+                            }
+                            
+                            // Custom Month & Year Filter Pill
+                            let isCustomSelected: Bool = {
+                                if case .customMonthYear = activeFilter { return true }
+                                return false
+                            }()
+                            
+                            Button(action: { showMonthYearPicker = true }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "calendar")
+                                        .font(.system(size: 12, weight: .semibold))
+                                    Text(monthYearLabel(month: selectedMonth, year: selectedYear))
+                                        .modifier(InterFont(.semiBold, size: 13))
+                                    Image(systemName: "chevron.down")
+                                        .font(.system(size: 10, weight: .semibold))
+                                }
+                                .foregroundColor(isCustomSelected ? .white : Color.text_secondary_color)
+                                .padding(.horizontal, 14).padding(.vertical, 7)
+                                .background(isCustomSelected ? Color.main_color : Color.secondary_color)
+                                .cornerRadius(20)
                             }
                         }
-                        Spacer()
+                        .padding(.horizontal, 16).padding(.vertical, 10)
                     }
-                    .padding(.horizontal, 16).padding(.vertical, 10)
                     
                     // Main scrollable content
-                    ExpenseMainView(filter: expenseFilter)
+                    ExpenseMainView(filterType: activeFilter)
                         .environmentObject(themeManager)
                         .environmentObject(exchangeService)
                     
@@ -118,11 +158,24 @@ struct ExpenseView: View {
                     .environmentObject(themeManager)
                     .environmentObject(exchangeService)
             }
+            .sheet(isPresented: $showMonthYearPicker) {
+                MonthYearPickerSheet(selectedMonth: $selectedMonth, selectedYear: $selectedYear) {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                        activeFilter = .customMonthYear(month: selectedMonth, year: selectedYear)
+                    }
+                }
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
         .preferredColorScheme(themeManager.isDarkMode ? .dark : .light)
+    }
+    
+    private func monthYearLabel(month: Int, year: Int) -> String {
+        let fmt = DateFormatter()
+        let symbol = fmt.shortMonthSymbols[month - 1]
+        return "\(symbol) \(year)"
     }
 }
 
@@ -130,7 +183,7 @@ struct ExpenseView: View {
 
 struct ExpenseMainView: View {
     
-    var filter: ExpenseCDFilterTime
+    var filterType: DashboardFilterType
     var fetchRequest: FetchRequest<ExpenseCD>
     var expense: FetchedResults<ExpenseCD> { fetchRequest.wrappedValue }
     
@@ -141,17 +194,41 @@ struct ExpenseMainView: View {
     @State private var animateHeader = false
     @State private var animateItems = false
     
-    init(filter: ExpenseCDFilterTime) {
+    init(filterType: DashboardFilterType) {
         let sort = NSSortDescriptor(key: "occuredOn", ascending: false)
-        self.filter = filter
-        if filter == .all {
-            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort])
-        } else {
-            var startDate: NSDate!
-            let endDate = NSDate()
-            if filter == .week { startDate = Date().getLast7Day()! as NSDate }
-            else if filter == .month { startDate = Date().getLast30Day()! as NSDate }
-            else { startDate = Date().getLast6Month()! as NSDate }
+        self.filterType = filterType
+        
+        switch filterType {
+        case .quick(let filter):
+            if filter == .all {
+                fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort])
+            } else {
+                var startDate: NSDate!
+                let endDate = NSDate()
+                if filter == .week { startDate = Date().getLast7Day()! as NSDate }
+                else if filter == .month { startDate = Date().getLast30Day()! as NSDate }
+                else { startDate = Date().getLast6Month()! as NSDate }
+                let predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@", startDate, endDate)
+                fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort], predicate: predicate)
+            }
+            
+        case .customMonthYear(let month, let year):
+            let calendar = Calendar.current
+            var components = DateComponents()
+            components.year = year
+            components.month = month
+            components.day = 1
+            components.hour = 0
+            components.minute = 0
+            components.second = 0
+            
+            let startDate = calendar.date(from: components)! as NSDate
+            
+            var endComponents = DateComponents()
+            endComponents.month = 1
+            endComponents.second = -1
+            let endDate = calendar.date(byAdding: endComponents, to: startDate as Date)! as NSDate
+            
             let predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@", startDate, endDate)
             fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort], predicate: predicate)
         }
@@ -169,8 +246,8 @@ struct ExpenseMainView: View {
             if expense.isEmpty {
                 LottieView(animType: .empty_face).frame(width: 300, height: 300)
                 VStack {
-                    TextView(text: "No Transaction Yet!", type: .h6).foregroundColor(Color.text_primary_color)
-                    TextView(text: "Add a transaction and it will show up here", type: .body_1)
+                    TextView(text: "No Transaction Found!", type: .h6).foregroundColor(Color.text_primary_color)
+                    TextView(text: "No transactions found for this period", type: .body_1)
                         .foregroundColor(Color.text_secondary_color).padding(.top, 2)
                 }.padding(.horizontal)
             } else {
@@ -204,9 +281,9 @@ struct ExpenseMainView: View {
                     
                     // ── Income / Expense Cards ──
                     HStack(spacing: 10) {
-                        ExpenseSummaryCard(isIncome: true, filter: filter)
+                        ExpenseSummaryCard(isIncome: true, filterType: filterType)
                             .environmentObject(exchangeService)
-                        ExpenseSummaryCard(isIncome: false, filter: filter)
+                        ExpenseSummaryCard(isIncome: false, filterType: filterType)
                             .environmentObject(exchangeService)
                     }
                     .offset(y: animateHeader ? 0 : -10)
@@ -214,7 +291,7 @@ struct ExpenseMainView: View {
                     
                     // ── Recent Transactions ──
                     HStack {
-                        TextView(text: "Recent Transaction", type: .subtitle_1).foregroundColor(Color.text_primary_color)
+                        TextView(text: "Transactions (\(expense.count))", type: .subtitle_1).foregroundColor(Color.text_primary_color)
                         Spacer()
                     }.padding(4)
                     
@@ -262,7 +339,7 @@ extension View {
 struct ExpenseSummaryCard: View {
     
     var isIncome: Bool
-    var filter: ExpenseCDFilterTime
+    var filterType: DashboardFilterType
     var fetchRequest: FetchRequest<ExpenseCD>
     var expense: FetchedResults<ExpenseCD> { fetchRequest.wrappedValue }
     
@@ -271,20 +348,44 @@ struct ExpenseSummaryCard: View {
     
     private let type: String
     
-    init(isIncome: Bool, filter: ExpenseCDFilterTime) {
+    init(isIncome: Bool, filterType: DashboardFilterType) {
         self.isIncome = isIncome
-        self.filter = filter
+        self.filterType = filterType
         self.type = isIncome ? TRANS_TYPE_INCOME : TRANS_TYPE_EXPENSE
         let sort = NSSortDescriptor(key: "occuredOn", ascending: false)
-        if filter == .all {
-            let predicate = NSPredicate(format: "type == %@", type)
-            fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort], predicate: predicate)
-        } else {
-            var startDate: NSDate!
-            let endDate = NSDate()
-            if filter == .week { startDate = Date().getLast7Day()! as NSDate }
-            else if filter == .month { startDate = Date().getLast30Day()! as NSDate }
-            else { startDate = Date().getLast6Month()! as NSDate }
+        
+        switch filterType {
+        case .quick(let filter):
+            if filter == .all {
+                let predicate = NSPredicate(format: "type == %@", type)
+                fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort], predicate: predicate)
+            } else {
+                var startDate: NSDate!
+                let endDate = NSDate()
+                if filter == .week { startDate = Date().getLast7Day()! as NSDate }
+                else if filter == .month { startDate = Date().getLast30Day()! as NSDate }
+                else { startDate = Date().getLast6Month()! as NSDate }
+                let predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@ AND type == %@", startDate, endDate, type)
+                fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort], predicate: predicate)
+            }
+            
+        case .customMonthYear(let month, let year):
+            let calendar = Calendar.current
+            var components = DateComponents()
+            components.year = year
+            components.month = month
+            components.day = 1
+            components.hour = 0
+            components.minute = 0
+            components.second = 0
+            
+            let startDate = calendar.date(from: components)! as NSDate
+            
+            var endComponents = DateComponents()
+            endComponents.month = 1
+            endComponents.second = -1
+            let endDate = calendar.date(byAdding: endComponents, to: startDate as Date)! as NSDate
+            
             let predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@ AND type == %@", startDate, endDate, type)
             fetchRequest = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort], predicate: predicate)
         }
@@ -367,5 +468,95 @@ struct ExpenseTransView: View {
         .padding(12)
         .background(Color.secondary_color)
         .cornerRadius(14)
+    }
+}
+
+// MARK: - Month & Year Picker Sheet Component
+
+struct MonthYearPickerSheet: View {
+    @Binding var selectedMonth: Int
+    @Binding var selectedYear: Int
+    var onApply: () -> Void
+    
+    @Environment(\.presentationMode) var presentationMode
+    
+    let months = Calendar.current.shortMonthSymbols
+    let years = Array(2020...2030)
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Text("Select Month & Year")
+                    .modifier(InterFont(.bold, size: 18))
+                    .foregroundColor(Color.text_primary_color)
+                Spacer()
+                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(Color.text_secondary_color)
+                }
+            }
+            .padding(.top, 20)
+            
+            // Year Selector Row
+            HStack(spacing: 12) {
+                Text("Year:")
+                    .modifier(InterFont(.semiBold, size: 15))
+                    .foregroundColor(Color.text_secondary_color)
+                
+                Picker("Year", selection: $selectedYear) {
+                    ForEach(years, id: \.self) { yr in
+                        Text(String(yr)).tag(yr)
+                    }
+                }
+                .pickerStyle(WheelPickerStyle())
+                .frame(height: 100)
+                .clipped()
+            }
+            .padding(.horizontal, 16)
+            .background(Color.secondary_color)
+            .cornerRadius(12)
+            
+            // Month Grid
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Month:")
+                    .modifier(InterFont(.semiBold, size: 15))
+                    .foregroundColor(Color.text_secondary_color)
+                
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                    ForEach(1...12, id: \.self) { m in
+                        let isSelected = selectedMonth == m
+                        Button(action: { selectedMonth = m }) {
+                            Text(months[m - 1])
+                                .modifier(InterFont(.semiBold, size: 14))
+                                .foregroundColor(isSelected ? .white : Color.text_primary_color)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .background(isSelected ? Color.main_color : Color.secondary_color)
+                                .cornerRadius(10)
+                        }
+                    }
+                }
+            }
+            
+            // Apply Button
+            Button(action: {
+                onApply()
+                presentationMode.wrappedValue.dismiss()
+            }) {
+                Text("Apply Filter")
+                    .modifier(InterFont(.semiBold, size: 16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.main_color)
+                    .cornerRadius(12)
+                    .shadow(color: Color.main_color.opacity(0.4), radius: 8, x: 0, y: 4)
+            }
+            
+            Spacer()
+        }
+        .padding(20)
+        .background(Color.primary_color.edgesIgnoringSafeArea(.all))
     }
 }

@@ -24,9 +24,9 @@ class AddExpenseViewModel: ObservableObject {
     @Published var selectedType = TRANS_TYPE_INCOME
     @Published var selectedTag = TRANS_TAG_TRANSPORT
     
-    /// ISO currency code for this transaction — defaults to user's Display Currency
     @Published var selectedCurrencyCode: String = UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) ?? "INR"
     @Published var showCurrencyPicker = false
+    @Published var showCalculator = false
     
     @Published var imageUpdated = false
     @Published var imageAttached: UIImage? = nil

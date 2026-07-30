@@ -54,6 +54,7 @@
 		FFC623DAD12BAA43ACA78AD0 /* BudgetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF38F5D50C39D144D8B94AC4 /* BudgetManager.swift */; };
 		FFE7E6D4917C7142D581524D /* CurrencyAmountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7395096DE46D47DC95CD80 /* CurrencyAmountView.swift */; };
 		FF602276AF79054AE286B1EE /* BudgetProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA75E5973506A4143AA18FB /* BudgetProgressView.swift */; };
+		FFC7B63287501040FCBA5329 /* CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFDF864ACE006B41C5809BE5 /* CalculatorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -108,6 +109,7 @@
 		FF38F5D50C39D144D8B94AC4 /* BudgetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/BudgetManager.swift"; sourceTree = "<group>"; };
 		FF7395096DE46D47DC95CD80 /* CurrencyAmountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/CurrencyAmountView.swift"; sourceTree = "<group>"; };
 		FFA75E5973506A4143AA18FB /* BudgetProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/BudgetProgressView.swift"; sourceTree = "<group>"; };
+		FFDF864ACE006B41C5809BE5 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/CalculatorView.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -459,6 +461,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FFC7B63287501040FCBA5329 /* CalculatorView.swift in Sources */,
 				FF46CBDF1D92154A86BC64BD /* ExchangeRateService.swift in Sources */,
 				FFC623DAD12BAA43ACA78AD0 /* BudgetManager.swift in Sources */,
 				FFE7E6D4917C7142D581524D /* CurrencyAmountView.swift in Sources */,

@@ -70,22 +70,44 @@ struct AddExpenseView: View {
                                 .background(Color.secondary_color)
                                 .cornerRadius(8)
                             
-                            // Amount + currency symbol prefix
-                            HStack(spacing: 0) {
-                                Text(symbolFor(currencyCode: viewModel.selectedCurrencyCode))
-                                    .modifier(InterFont(.semiBold, size: 18))
-                                    .foregroundColor(Color.main_color)
-                                    .frame(width: 48, height: 50)
-                                    .background(Color.main_color.opacity(0.12))
+                            // Amount + currency symbol prefix + calculator toggle
+                            VStack(spacing: 8) {
+                                HStack(spacing: 0) {
+                                    Text(symbolFor(currencyCode: viewModel.selectedCurrencyCode))
+                                        .modifier(InterFont(.semiBold, size: 18))
+                                        .foregroundColor(Color.main_color)
+                                        .frame(width: 48, height: 50)
+                                        .background(Color.main_color.opacity(0.12))
+                                    
+                                    TextField("Amount", text: $viewModel.amount)
+                                        .modifier(InterFont(.regular, size: 16))
+                                        .accentColor(Color.text_primary_color)
+                                        .frame(height: 50).padding(.leading, 12)
+                                        .keyboardType(.decimalPad)
+                                    
+                                    Button(action: {
+                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                                            viewModel.showCalculator.toggle()
+                                        }
+                                    }) {
+                                        Image(systemName: viewModel.showCalculator ? "calculator.fill" : "calculator")
+                                            .font(.system(size: 18, weight: .semibold))
+                                            .foregroundColor(viewModel.showCalculator ? Color.main_color : Color.text_secondary_color)
+                                            .padding(.horizontal, 14)
+                                    }
+                                }
+                                .background(Color.secondary_color)
+                                .cornerRadius(8)
                                 
-                                TextField("Amount", text: $viewModel.amount)
-                                    .modifier(InterFont(.regular, size: 16))
-                                    .accentColor(Color.text_primary_color)
-                                    .frame(height: 50).padding(.leading, 12)
-                                    .keyboardType(.decimalPad)
+                                if viewModel.showCalculator {
+                                    CalculatorView(amountText: $viewModel.amount) {
+                                        withAnimation {
+                                            viewModel.showCalculator = false
+                                        }
+                                    }
+                                    .transition(.opacity.combined(with: .move(edge: .top)))
+                                }
                             }
-                            .background(Color.secondary_color)
-                            .cornerRadius(8)
                             
                             // Transaction Type Picker Button
                             Button(action: { viewModel.showTypeDrop = true }) {
