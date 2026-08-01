@@ -70,7 +70,7 @@ struct AddExpenseView: View {
                                 .background(Color.secondary_color)
                                 .cornerRadius(8)
                             
-                            // Amount + currency symbol prefix + calculator toggle
+                            // Amount + currency symbol prefix + prominent calculator toggle
                             VStack(spacing: 8) {
                                 HStack(spacing: 0) {
                                     Text(symbolFor(currencyCode: viewModel.selectedCurrencyCode))
@@ -79,21 +79,29 @@ struct AddExpenseView: View {
                                         .frame(width: 48, height: 50)
                                         .background(Color.main_color.opacity(0.12))
                                     
-                                    TextField("Amount", text: $viewModel.amount)
+                                    TextField("Amount or math (e.g. 50+20)", text: $viewModel.amount)
                                         .modifier(InterFont(.regular, size: 16))
                                         .accentColor(Color.text_primary_color)
                                         .frame(height: 50).padding(.leading, 12)
-                                        .keyboardType(.decimalPad)
+                                        .keyboardType(.numbersAndPunctuation)
                                     
                                     Button(action: {
                                         withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                                             viewModel.showCalculator.toggle()
                                         }
                                     }) {
-                                        Image(systemName: viewModel.showCalculator ? "calculator.fill" : "calculator")
-                                            .font(.system(size: 18, weight: .semibold))
-                                            .foregroundColor(viewModel.showCalculator ? Color.main_color : Color.text_secondary_color)
-                                            .padding(.horizontal, 14)
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "calculator.fill")
+                                                .font(.system(size: 14, weight: .semibold))
+                                            Text(viewModel.showCalculator ? "Close" : "Calc")
+                                                .modifier(InterFont(.semiBold, size: 12))
+                                        }
+                                        .foregroundColor(viewModel.showCalculator ? .white : Color.main_color)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(viewModel.showCalculator ? Color.main_color : Color.main_color.opacity(0.14))
+                                        .cornerRadius(6)
+                                        .padding(.trailing, 8)
                                     }
                                 }
                                 .background(Color.secondary_color)

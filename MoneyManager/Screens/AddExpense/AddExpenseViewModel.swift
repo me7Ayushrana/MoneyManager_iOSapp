@@ -24,6 +24,7 @@ class AddExpenseViewModel: ObservableObject {
     @Published var selectedType = TRANS_TYPE_INCOME
     @Published var selectedTag = TRANS_TAG_TRANSPORT
     
+    /// ISO currency code for this transaction — defaults to user's Display Currency
     @Published var selectedCurrencyCode: String = UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) ?? "INR"
     @Published var showCurrencyPicker = false
     @Published var showCalculator = false
@@ -36,13 +37,12 @@ class AddExpenseViewModel: ObservableObject {
     @Published var closePresenter = false
     
     init(expenseObj: ExpenseCD? = nil) {
-        
         self.expenseObj = expenseObj
         self.title = expenseObj?.title ?? ""
         if let expenseObj = expenseObj {
-            self.amount = String(expenseObj.amount)
+            let amt = expenseObj.amount
+            self.amount = amt.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", amt) : String(format: "%.2f", amt)
             self.typeTitle = expenseObj.type == TRANS_TYPE_INCOME ? "Income" : "Expense"
-            // Load saved currency, or fall back to Display Currency
             self.selectedCurrencyCode = expenseObj.resolvedCurrencyCode
         } else {
             self.amount = ""
@@ -79,6 +79,25 @@ class AddExpenseViewModel: ObservableObject {
     
     func removeImage() { imageAttached = nil }
     
+    /// Evaluates any arithmetic expression in `amount` string e.g. "100+25-10" → 115.0
+    func parseAmountValue(_ text: String) -> Double? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let direct = Double(trimmed) { return direct }
+        
+        var sanitized = trimmed.replacingOccurrences(of: "×", with: "*")
+            .replacingOccurrences(of: "÷", with: "/")
+        while let last = sanitized.last, ["+", "-", "*", "/"].contains(String(last)) {
+            sanitized.removeLast()
+        }
+        guard !sanitized.isEmpty else { return nil }
+        
+        let expression = NSExpression(format: sanitized)
+        if let result = expression.expressionValue(with: nil, context: nil) as? NSNumber {
+            return result.doubleValue
+        }
+        return nil
+    }
+    
     func saveTransaction(managedObjectContext: NSManagedObjectContext) {
         
         let expense: ExpenseCD
@@ -87,8 +106,9 @@ class AddExpenseViewModel: ObservableObject {
         
         if titleStr.isEmpty { alertMsg = "Enter Title"; showAlert = true; return }
         if amountStr.isEmpty { alertMsg = "Enter Amount"; showAlert = true; return }
-        guard let amountVal = Double(amountStr) else {
-            alertMsg = "Enter valid number"; showAlert = true; return
+        
+        guard let amountVal = parseAmountValue(amountStr) else {
+            alertMsg = "Enter a valid number or math expression (e.g. 50+20)"; showAlert = true; return
         }
         guard amountVal >= 0 else {
             alertMsg = "Amount can't be negative"; showAlert = true; return
@@ -96,6 +116,9 @@ class AddExpenseViewModel: ObservableObject {
         guard amountVal <= 1_000_000_000 else {
             alertMsg = "Enter a smaller amount"; showAlert = true; return
         }
+        
+        // Update amount field with evaluated number
+        self.amount = amountVal.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", amountVal) : String(format: "%.2f", amountVal)
         
         if expenseObj != nil {
             expense = expenseObj!
@@ -120,7 +143,7 @@ class AddExpenseViewModel: ObservableObject {
         expense.occuredOn = occuredOn
         expense.note = note
         expense.amount = amountVal
-        expense.currencyCode = selectedCurrencyCode   // ← NEW: save original currency
+        expense.currencyCode = selectedCurrencyCode
         do {
             try managedObjectContext.save()
             closePresenter = true
