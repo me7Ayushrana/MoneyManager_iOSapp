@@ -34,42 +34,102 @@ struct ExpenseView: View {
     @State private var showMonthYearPicker = false
     @State private var isAnimatingFAB = false
     
+    // Time-based greeting helper
+    private var greetingText: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 0..<12:  return "Good Morning,"
+        case 12..<17: return "Good Afternoon,"
+        default:      return "Good Evening,"
+        }
+    }
+    
     var body: some View {
         NavigationView {
             ZStack {
                 Color.primary_color.edgesIgnoringSafeArea(.all)
                 
                 VStack(spacing: 0) {
-                    // Toolbar
-                    HStack {
-                        TextView(text: "Dashboard", type: .h6).foregroundColor(Color.text_primary_color)
-                        Spacer()
-                        // Theme toggle
-                        Button(action: { themeManager.toggle() }) {
-                            Image(systemName: themeManager.isDarkMode ? "sun.max.fill" : "moon.fill")
-                                .renderingMode(.template)
-                                .resizable()
-                                .frame(width: 22.0, height: 22.0)
-                                .foregroundColor(Color.text_primary_color)
-                        }.padding(.horizontal, 8)
-                        // Filter & Insights
-                        Button(action: { showFilter = true }) {
-                            Image(IMAGE_FILTER_ICON).renderingMode(.template).resizable()
-                                .frame(width: 28.0, height: 28.0).foregroundColor(Color.text_primary_color)
-                        }.padding(.horizontal, 8)
-                        // Settings
-                        Button(action: { showSettings = true }) {
-                            Image(IMAGE_OPTION_ICON).renderingMode(.template).resizable()
-                                .frame(width: 28.0, height: 28.0).foregroundColor(Color.text_primary_color)
+                    // Header Bar
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(greetingText)
+                                    .modifier(InterFont(.regular, size: 14))
+                                    .foregroundColor(Color.text_secondary_color)
+                                
+                                HStack(spacing: 6) {
+                                    Text("Ayush 👋")
+                                        .modifier(InterFont(.bold, size: 28))
+                                        .foregroundColor(Color.text_primary_color)
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            HStack(spacing: 12) {
+                                // Theme toggle
+                                Button(action: { themeManager.toggle() }) {
+                                    Image(systemName: themeManager.isDarkMode ? "sun.max.fill" : "moon.fill")
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundColor(Color.text_primary_color)
+                                        .frame(width: 40, height: 40)
+                                        .background(Color.secondary_color)
+                                        .cornerRadius(20)
+                                        .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
+                                }
+                                
+                                // Insights / Filter
+                                Button(action: { showFilter = true }) {
+                                    Image(systemName: "chart.pie.fill")
+                                        .font(.system(size: 17, weight: .semibold))
+                                        .foregroundColor(Color.text_primary_color)
+                                        .frame(width: 40, height: 40)
+                                        .background(Color.secondary_color)
+                                        .cornerRadius(20)
+                                        .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
+                                }
+                                
+                                // Settings
+                                Button(action: { showSettings = true }) {
+                                    Image(systemName: "gearshape.fill")
+                                        .font(.system(size: 17, weight: .semibold))
+                                        .foregroundColor(Color.text_primary_color)
+                                        .frame(width: 40, height: 40)
+                                        .background(Color.secondary_color)
+                                        .cornerRadius(20)
+                                        .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
+                                }
+                            }
                         }
+                        
+                        // Financial summary subtitle pill
+                        HStack(spacing: 6) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.up.right")
+                                    .font(.system(size: 10, weight: .bold))
+                                Text("18%")
+                                    .modifier(InterFont(.bold, size: 11))
+                            }
+                            .foregroundColor(Color.main_green)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(Color.main_green.opacity(0.12))
+                            .cornerRadius(12)
+                            
+                            Text("You saved 18% more this month.")
+                                .modifier(InterFont(.medium, size: 13))
+                                .foregroundColor(Color.text_secondary_color)
+                        }
+                        .padding(.top, 2)
                     }
-                    .padding(16).padding(.top, 30).padding(.horizontal, 8)
-                    .background(Color.secondary_color)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+                    .padding(.bottom, 12)
+                    .background(Color.primary_color)
                     
                     // Filter pills bar (All, Week, Month, Month & Year picker)
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            // Quick Filters: All, Week, Month
                             ForEach([("All", ExpenseCDFilterTime.all), ("Week", .week), ("Month", .month)], id: \.0) { label, filter in
                                 let isSelected = activeFilter == .quick(filter)
                                 Button(action: {
@@ -80,13 +140,13 @@ struct ExpenseView: View {
                                     Text(label)
                                         .modifier(InterFont(.semiBold, size: 13))
                                         .foregroundColor(isSelected ? .white : Color.text_secondary_color)
-                                        .padding(.horizontal, 16).padding(.vertical, 7)
+                                        .padding(.horizontal, 16).padding(.vertical, 8)
                                         .background(isSelected ? Color.main_color : Color.secondary_color)
                                         .cornerRadius(20)
+                                        .shadow(color: isSelected ? Color.main_color.opacity(0.3) : Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
                                 }
                             }
                             
-                            // Custom Month & Year Filter Pill
                             let isCustomSelected: Bool = {
                                 if case .customMonthYear = activeFilter { return true }
                                 return false
@@ -102,12 +162,14 @@ struct ExpenseView: View {
                                         .font(.system(size: 10, weight: .semibold))
                                 }
                                 .foregroundColor(isCustomSelected ? .white : Color.text_secondary_color)
-                                .padding(.horizontal, 14).padding(.vertical, 7)
+                                .padding(.horizontal, 14).padding(.vertical, 8)
                                 .background(isCustomSelected ? Color.main_color : Color.secondary_color)
                                 .cornerRadius(20)
+                                .shadow(color: isCustomSelected ? Color.main_color.opacity(0.3) : Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
                             }
                         }
-                        .padding(.horizontal, 16).padding(.vertical, 10)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 8)
                     }
                     
                     // Main scrollable content
@@ -117,26 +179,37 @@ struct ExpenseView: View {
                     
                 }
                 
-                // FAB
+                // Floating Action Button (FAB)
                 VStack {
                     Spacer()
                     HStack {
                         Spacer()
                         Button(action: {
                             showAddExpense = true
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) { isAnimatingFAB = true }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { isAnimatingFAB = false }
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { isAnimatingFAB = true }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { isAnimatingFAB = false }
                         }) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(.white)
-                                .frame(width: 60, height: 60)
-                                .background(Color.main_color)
-                                .cornerRadius(30)
-                                .shadow(color: Color.main_color.opacity(0.45), radius: 12, x: 0, y: 6)
-                                .scaleEffect(isAnimatingFAB ? 1.15 : 1.0)
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color(hex: "2563EB"), Color(hex: "3B82F6")],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 58, height: 58)
+                                    .shadow(color: Color(hex: "2563EB").opacity(0.45), radius: 14, x: 0, y: 7)
+                                
+                                Image(systemName: "plus")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                            .scaleEffect(isAnimatingFAB ? 1.12 : 1.0)
                         }
-                    }.padding(24)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
                 }
                 
             }
@@ -193,6 +266,7 @@ struct ExpenseMainView: View {
     
     @State private var animateHeader = false
     @State private var animateItems = false
+    @State private var isBalanceHidden = false
     
     init(filterType: DashboardFilterType) {
         let sort = NSSortDescriptor(key: "occuredOn", ascending: false)
@@ -244,43 +318,95 @@ struct ExpenseMainView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             if expense.isEmpty {
-                LottieView(animType: .empty_face).frame(width: 300, height: 300)
-                VStack {
-                    TextView(text: "No Transaction Found!", type: .h6).foregroundColor(Color.text_primary_color)
-                    TextView(text: "No transactions found for this period", type: .body_1)
-                        .foregroundColor(Color.text_secondary_color).padding(.top, 2)
-                }.padding(.horizontal)
+                VStack(spacing: 12) {
+                    LottieView(animType: .empty_face).frame(width: 240, height: 240)
+                    TextView(text: "No Transactions Found", type: .subtitle_1)
+                        .foregroundColor(Color.text_primary_color)
+                    TextView(text: "No transactions recorded for this period", type: .body_2)
+                        .foregroundColor(Color.text_secondary_color)
+                }
+                .padding(.top, 40)
             } else {
-                VStack(spacing: 10) {
+                VStack(spacing: 16) {
                     
-                    // ── Total Balance Card ──
-                    VStack(spacing: 4) {
-                        TextView(text: "TOTAL BALANCE", type: .overline)
-                            .foregroundColor(Color.text_secondary_color)
-                            .padding(.top, 20)
-                        CurrencyAmountView.forHero(amount: totalBalance(), currencyCode: displayCurrency)
-                            .padding(.bottom, 4)
-                        // Offline rates notice
-                        if exchangeService.isUsingCachedRates, let _ = exchangeService.lastUpdated {
-                            HStack(spacing: 4) {
-                                Image(systemName: "wifi.slash")
-                                    .font(.system(size: 10))
-                                Text(exchangeService.lastUpdatedLabel)
-                                    .font(.system(size: 10))
+                    // ── Premium Hero Balance Card (30 pt radius) ──
+                    ZStack(alignment: .bottomLeading) {
+                        // Bezier Sparkline Curve Background
+                        SparklineView(points: [15, 25, 20, 38, 30, 52, 45, 68, 55, 82], lineColor: Color.white.opacity(0.35))
+                            .frame(height: 90)
+                            .padding(.bottom, 12)
+                        
+                        VStack(alignment: .leading, spacing: 14) {
+                            HStack {
+                                HStack(spacing: 6) {
+                                    Text("AVAILABLE BALANCE")
+                                        .modifier(InterFont(.semiBold, size: 11))
+                                        .foregroundColor(Color.white.opacity(0.75))
+                                    
+                                    Button(action: {
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                            isBalanceHidden.toggle()
+                                        }
+                                    }) {
+                                        Image(systemName: isBalanceHidden ? "eye.slash.fill" : "eye.fill")
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundColor(Color.white.opacity(0.85))
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                // Capsule Account / Currency Button
+                                HStack(spacing: 4) {
+                                    Text("All Accounts")
+                                        .modifier(InterFont(.semiBold, size: 11))
+                                    Image(systemName: "chevron.down")
+                                        .font(.system(size: 9, weight: .bold))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10).padding(.vertical, 5)
+                                .background(Color.white.opacity(0.18))
+                                .cornerRadius(14)
                             }
-                            .foregroundColor(Color.text_secondary_color.opacity(0.7))
-                            .padding(.bottom, 8)
+                            
+                            if isBalanceHidden {
+                                Text("••••••••")
+                                    .modifier(InterFont(.bold, size: 36))
+                                    .foregroundColor(.white)
+                                    .frame(height: 52, alignment: .leading)
+                            } else {
+                                CurrencyAmountView.forHero(amount: totalBalance(), currencyCode: displayCurrency)
+                                    .foregroundColor(.white)
+                            }
+                            
+                            if exchangeService.isUsingCachedRates, let _ = exchangeService.lastUpdated {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "wifi.slash").font(.system(size: 10))
+                                    Text(exchangeService.lastUpdatedLabel).font(.system(size: 10))
+                                }
+                                .foregroundColor(Color.white.opacity(0.7))
+                            }
                         }
+                        .padding(22)
                     }
                     .frame(maxWidth: .infinity)
-                    .background(Color.secondary_color)
-                    .cornerRadius(16)
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.main_color.opacity(0.15), lineWidth: 1))
+                    .frame(height: 175)
+                    .background(
+                        LinearGradient(
+                            colors: themeManager.isDarkMode ?
+                                [Color(hex: "1E1B4B"), Color(hex: "312E81")] :
+                                [Color(hex: "2563EB"), Color(hex: "6D5EF7")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .cornerRadius(30)
+                    .shadow(color: (themeManager.isDarkMode ? Color.black : Color(hex: "2563EB")).opacity(0.25), radius: 18, x: 0, y: 9)
                     .offset(y: animateHeader ? 0 : -20)
                     .opacity(animateHeader ? 1 : 0)
                     
-                    // ── Income / Expense Cards ──
-                    HStack(spacing: 10) {
+                    // ── Income / Expense Summary Cards (24 pt radius) ──
+                    HStack(spacing: 12) {
                         ExpenseSummaryCard(isIncome: true, filterType: filterType)
                             .environmentObject(exchangeService)
                         ExpenseSummaryCard(isIncome: false, filterType: filterType)
@@ -289,47 +415,42 @@ struct ExpenseMainView: View {
                     .offset(y: animateHeader ? 0 : -10)
                     .opacity(animateHeader ? 1 : 0)
                     
-                    // ── Recent Transactions ──
+                    // ── Recent Transactions Header ──
                     HStack {
-                        TextView(text: "Transactions (\(expense.count))", type: .subtitle_1).foregroundColor(Color.text_primary_color)
+                        TextView(text: "Recent Transactions", type: .h5)
+                            .foregroundColor(Color.text_primary_color)
                         Spacer()
-                    }.padding(4)
+                    }
+                    .padding(.top, 6)
+                    .padding(.horizontal, 4)
                     
-                    ForEach(expense) { expenseObj in
-                        let index = expense.firstIndex(of: expenseObj) ?? 0
-                        NavigationLink(
-                            destination: ExpenseDetailedView(expenseObj: expenseObj)
-                                .environmentObject(exchangeService),
-                            label: {
-                                ExpenseTransView(expenseObj: expenseObj)
-                                    .environmentObject(exchangeService)
-                                    .offset(y: animateItems ? 0 : 40)
-                                    .opacity(animateItems ? 1 : 0)
-                                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(Double(index) * 0.04 + 0.25), value: animateItems)
-                            }
-                        )
+                    // ── Transaction Cards (20 pt radius, 12 pt spacing) ──
+                    VStack(spacing: 10) {
+                        ForEach(expense) { expenseObj in
+                            let index = expense.firstIndex(of: expenseObj) ?? 0
+                            NavigationLink(
+                                destination: ExpenseDetailedView(expenseObj: expenseObj)
+                                    .environmentObject(exchangeService),
+                                label: {
+                                    ExpenseTransView(expenseObj: expenseObj)
+                                        .environmentObject(exchangeService)
+                                        .offset(y: animateItems ? 0 : 30)
+                                        .opacity(animateItems ? 1 : 0)
+                                        .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(Double(index) * 0.03 + 0.15), value: animateItems)
+                                }
+                            )
+                        }
                     }
                 }
                 Spacer().frame(height: 120)
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 24)
         .onAppear {
             withAnimation { animateHeader = true; animateItems = true }
         }
         .ifAvailableRefreshable {
             exchangeService.refresh()
-        }
-    }
-}
-
-extension View {
-    @ViewBuilder
-    func ifAvailableRefreshable(action: @escaping () -> Void) -> some View {
-        if #available(iOS 15.0, *) {
-            self.refreshable { action() }
-        } else {
-            self
         }
     }
 }
@@ -398,31 +519,46 @@ struct ExpenseSummaryCard: View {
     }
     
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                ZStack {
+                    Circle()
+                        .fill((isIncome ? Color.main_green : Color.main_red).opacity(0.14))
+                        .frame(width: 42, height: 42)
+                    Image(systemName: isIncome ? "arrow.down.left" : "arrow.up.right")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(isIncome ? Color.main_green : Color.main_red)
+                }
+                
+                Spacer()
+                
+                // Micro trend badge
+                HStack(spacing: 2) {
+                    Text(isIncome ? "↑ 12%" : "↓ 4%")
+                        .modifier(InterFont(.semiBold, size: 10))
+                        .foregroundColor(isIncome ? Color.main_green : Color.main_red)
+                }
+                .padding(.horizontal, 6).padding(.vertical, 3)
+                .background((isIncome ? Color.main_green : Color.main_red).opacity(0.1))
+                .cornerRadius(8)
+            }
+            
+            VStack(alignment: .leading, spacing: 3) {
                 TextView(text: isIncome ? "INCOME" : "EXPENSE", type: .overline)
                     .foregroundColor(Color.text_secondary_color)
                 CurrencyAmountView.forSummaryCard(amount: total(), currencyCode: displayCurrency, isIncome: isIncome)
             }
-            Spacer()
-            ZStack {
-                Circle()
-                    .fill(isIncome ? Color.main_green.opacity(0.18) : Color.main_red.opacity(0.18))
-                    .frame(width: 44, height: 44)
-                Image(systemName: isIncome ? "arrow.down.circle.fill" : "arrow.up.circle.fill")
-                    .font(.system(size: 22))
-                    .foregroundColor(isIncome ? Color.main_green : Color.main_red)
-            }
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity)
         .background(Color.secondary_color)
-        .cornerRadius(14)
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.main_color.opacity(0.1), lineWidth: 1))
+        .cornerRadius(24)
+        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.card_border, lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 5)
     }
 }
 
-// MARK: - Transaction row
+// MARK: - Transaction Row Card (20 pt radius)
 
 struct ExpenseTransView: View {
     
@@ -434,16 +570,16 @@ struct ExpenseTransView: View {
         let isIncome = expenseObj.type == TRANS_TYPE_INCOME
         let convertedAmt = exchangeService.convertedAmount(expenseObj.amount, from: expenseObj.resolvedCurrencyCode, to: displayCurrency)
         
-        HStack(spacing: 12) {
-            // Category icon
+        HStack(spacing: 14) {
+            // Category icon badge (44x44 pt)
             Image(getTransTagIcon(transTag: expenseObj.tag ?? ""))
                 .resizable().scaledToFit()
-                .frame(width: 32, height: 32)
+                .frame(width: 24, height: 24)
                 .padding(10)
                 .background(Color.main_color.opacity(0.12))
-                .cornerRadius(12)
+                .cornerRadius(14)
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 TextView(text: expenseObj.title ?? "", type: .subtitle_1, lineLimit: 1)
                     .foregroundColor(Color.text_primary_color)
                 TextView(text: getTransTagTitle(transTag: expenseObj.tag ?? ""), type: .body_2)
@@ -452,10 +588,10 @@ struct ExpenseTransView: View {
             
             Spacer()
             
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: 3) {
                 CurrencyAmountView.forTransaction(amount: convertedAmt, currencyCode: displayCurrency, isIncome: isIncome)
                 Text(getDateFormatter(date: expenseObj.occuredOn, format: "MMM d, yyyy"))
-                    .modifier(InterFont(.regular, size: 11))
+                    .modifier(InterFont(.regular, size: 12))
                     .foregroundColor(Color.text_secondary_color)
                 // Show original currency badge if different from display
                 if expenseObj.resolvedCurrencyCode != displayCurrency {
@@ -465,9 +601,11 @@ struct ExpenseTransView: View {
                 }
             }
         }
-        .padding(12)
+        .padding(14)
         .background(Color.secondary_color)
-        .cornerRadius(14)
+        .cornerRadius(20)
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.card_border, lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 3)
     }
 }
 
@@ -558,5 +696,16 @@ struct MonthYearPickerSheet: View {
         }
         .padding(20)
         .background(Color.primary_color.edgesIgnoringSafeArea(.all))
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func ifAvailableRefreshable(action: @escaping () -> Void) -> some View {
+        if #available(iOS 15.0, *) {
+            self.refreshable { action() }
+        } else {
+            self
+        }
     }
 }
