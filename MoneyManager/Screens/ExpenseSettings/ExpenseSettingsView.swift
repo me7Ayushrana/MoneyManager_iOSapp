@@ -16,7 +16,10 @@ struct ExpenseSettingsView: View {
     @EnvironmentObject var budgetManager: BudgetManager
     
     @ObservedObject private var viewModel = ExpenseSettingsViewModel()
+    @AppStorage(UD_MONTHLY_BUDGET) var monthlyBudget: Double = 5000.0
+    
     @State private var selectDisplayCurrency = false
+    @State private var showBudgetSheet = false
     @State private var selectedBudgetTag: String? = nil
     
     let tagOptions = [
@@ -102,6 +105,42 @@ struct ExpenseSettingsView: View {
                                     buttons.append(.cancel())
                                     return ActionSheet(title: Text("Display Currency"), message: Text("All summaries, totals, and charts will convert into this currency"), buttons: buttons)
                                 }
+                                
+                                // Set Monthly Budget Row
+                                Button(action: { showBudgetSheet = true }) {
+                                    HStack {
+                                        Image(systemName: "target")
+                                            .font(.system(size: 18, weight: .medium))
+                                            .foregroundColor(Color.main_color)
+                                            .frame(width: 36, height: 36)
+                                            .background(Color.main_color.opacity(0.12))
+                                            .cornerRadius(10)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            TextView(text: "Set Monthly Budget", type: .button)
+                                                .foregroundColor(Color.text_primary_color)
+                                            Text("Used for budget progress & warnings")
+                                                .modifier(InterFont(.regular, size: 11))
+                                                .foregroundColor(Color.text_secondary_color)
+                                        }
+                                        Spacer()
+                                        Text("\(symbolFor(currencyCode: viewModel.displayCurrency)) \(String(format: "%.0f", monthlyBudget.rounded()))")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(Color.main_color)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 6)
+                                            .background(Color.main_color.opacity(0.12))
+                                            .cornerRadius(8)
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundColor(Color.text_secondary_color)
+                                    }
+                                    .padding(14)
+                                    .background(Color.secondary_color)
+                                    .cornerRadius(12)
+                                }
+                                .sheet(isPresented: $showBudgetSheet) {
+                                    SetBudgetSheet(monthlyBudget: $monthlyBudget, displayCurrency: viewModel.displayCurrency) { _ in }
+                                }
                             }
                             
                             // ── LIVE EXCHANGE RATES STATUS ──
@@ -120,128 +159,88 @@ struct ExpenseSettingsView: View {
                                         .cornerRadius(10)
                                     
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(exchangeService.isUsingCachedRates ? "Using Cached Rates" : "Rates Live & Up to Date")
+                                        Text(exchangeService.isUsingCachedRates ? "Using Cached Rates" : "Live Exchange Rates Active")
                                             .modifier(InterFont(.semiBold, size: 14))
                                             .foregroundColor(Color.text_primary_color)
                                         Text(exchangeService.lastUpdatedLabel)
                                             .modifier(InterFont(.regular, size: 11))
                                             .foregroundColor(Color.text_secondary_color)
                                     }
-                                    
                                     Spacer()
                                     
                                     Button(action: { exchangeService.refresh() }) {
-                                        Text("Refresh")
-                                            .modifier(InterFont(.semiBold, size: 12))
-                                            .foregroundColor(Color.main_color)
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 6)
-                                            .background(Color.main_color.opacity(0.12))
-                                            .cornerRadius(8)
-                                    }
+                                         Image(systemName: "arrow.clockwise")
+                                             .font(.system(size: 14, weight: .semibold))
+                                             .foregroundColor(Color.main_color)
+                                             .padding(8)
+                                             .background(Color.main_color.opacity(0.12))
+                                             .cornerRadius(8)
+                                     }
                                 }
                                 .padding(14)
                                 .background(Color.secondary_color)
                                 .cornerRadius(12)
                             }
                             
-                            // ── CATEGORY BUDGET GOALS ──
+                            // ── CATEGORY BUDGETS ──
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("MONTHLY BUDGET GOALS")
-                                    .modifier(InterFont(.semiBold, size: 11))
-                                    .foregroundColor(Color.text_secondary_color)
-                                    .padding(.horizontal, 4)
+                                HStack {
+                                    Text("CATEGORY BUDGETS")
+                                        .modifier(InterFont(.semiBold, size: 11))
+                                        .foregroundColor(Color.text_secondary_color)
+                                    Spacer()
+                                    Text("Tap category to edit")
+                                        .modifier(InterFont(.regular, size: 10))
+                                        .foregroundColor(Color.text_secondary_color)
+                                }
+                                .padding(.horizontal, 4)
                                 
-                                VStack(spacing: 8) {
-                                    ForEach(tagOptions, id: \.self) { tag in
-                                        let currentLimit = budgetManager.limit(for: tag) ?? 0.0
-                                        Button(action: { selectedBudgetTag = tag }) {
-                                            HStack {
-                                                Image(getTransTagIcon(transTag: tag))
-                                                    .resizable().scaledToFit()
-                                                    .frame(width: 24, height: 24)
-                                                    .padding(6)
-                                                    .background(Color.main_color.opacity(0.12))
-                                                    .cornerRadius(8)
-                                                
-                                                Text(getTransTagTitle(transTag: tag))
-                                                    .modifier(InterFont(.medium, size: 14))
-                                                    .foregroundColor(Color.text_primary_color)
-                                                
-                                                Spacer()
-                                                
-                                                if currentLimit > 0 {
-                                                    CurrencyAmountView(amount: currentLimit, currencyCode: viewModel.displayCurrency, amountType: .caption, codeType: .caption, color: Color.main_color)
-                                                } else {
-                                                    Text("Not set")
-                                                        .modifier(InterFont(.regular, size: 12))
-                                                        .foregroundColor(Color.text_secondary_color)
-                                                }
-                                                
-                                                Image(systemName: "chevron.right")
-                                                    .font(.system(size: 12, weight: .semibold))
-                                                    .foregroundColor(Color.text_secondary_color)
-                                            }
-                                            .padding(12)
-                                            .background(Color.secondary_color)
-                                            .cornerRadius(10)
+                                ForEach(tagOptions, id: \.self) { tagKey in
+                                    BudgetProgressView(tag: tagKey, spentConverted: 0, displayCurrency: viewModel.displayCurrency)
+                                        .environmentObject(budgetManager)
+                                        .onTapGesture {
+                                            selectedBudgetTag = tagKey
                                         }
-                                    }
                                 }
                             }
                             
-                            // ── DATA EXPORT ──
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("DATA")
+                            // ── APP INFO SECTION ──
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("ABOUT")
                                     .modifier(InterFont(.semiBold, size: 11))
                                     .foregroundColor(Color.text_secondary_color)
                                     .padding(.horizontal, 4)
                                 
-                                Button(action: { viewModel.exportTransactions(moc: managedObjectContext, exchangeService: exchangeService) }) {
-                                    HStack {
-                                        Image(systemName: "square.and.arrow.up.fill")
-                                            .font(.system(size: 18, weight: .medium))
-                                            .foregroundColor(Color.main_color)
-                                            .frame(width: 36, height: 36)
-                                            .background(Color.main_color.opacity(0.12))
-                                            .cornerRadius(10)
-                                        TextView(text: "Export Transactions (CSV)", type: .button)
-                                            .foregroundColor(Color.text_primary_color)
-                                        Spacer()
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 13, weight: .semibold))
-                                            .foregroundColor(Color.text_secondary_color)
-                                    }
-                                    .padding(14)
-                                    .background(Color.secondary_color)
-                                    .cornerRadius(12)
+                                HStack {
+                                    TextView(text: "App Version", type: .button)
+                                        .foregroundColor(Color.text_primary_color)
+                                    Spacer()
+                                    TextView(text: viewModel.appVersion, type: .body_1)
+                                        .foregroundColor(Color.text_secondary_color)
                                 }
+                                .padding(14)
+                                .background(Color.secondary_color)
+                                .cornerRadius(12)
                             }
-                            
-                            Spacer().frame(height: 50)
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.top, 16)
-                    }
-                    .alert(isPresented: $viewModel.showAlert) {
-                        Alert(title: Text(APP_NAME), message: Text(viewModel.alertMsg), dismissButton: .default(Text("OK")))
+                        .padding(16)
                     }
                 }
-                .edgesIgnoringSafeArea(.top)
             }
-            .sheet(item: Binding<BudgetTagItem?>(
-                get: { selectedBudgetTag.map { BudgetTagItem(tag: $0) } },
-                set: { selectedBudgetTag = $0?.tag }
-            )) { item in
-                SetBudgetSheet(
-                    tag: item.tag,
-                    currentLimit: budgetManager.limit(for: item.tag) ?? 0.0,
-                    displayCurrency: viewModel.displayCurrency
-                ) { newLimit in
-                    budgetManager.setLimit(newLimit, for: item.tag)
+            .sheet(isPresented: Binding<Bool>(
+                get: { selectedBudgetTag != nil },
+                set: { if !$0 { selectedBudgetTag = nil } }
+            )) {
+                if let tagKey = selectedBudgetTag {
+                    SetCategoryBudgetSheetView(
+                        tag: tagKey,
+                        currentLimit: budgetManager.limit(for: tagKey) ?? 0,
+                        displayCurrency: viewModel.displayCurrency
+                    ) { newLimit in
+                        budgetManager.setLimit(newLimit, for: tagKey)
+                    }
                 }
             }
-            .navigationBarHidden(true)
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .navigationBarHidden(true)
@@ -249,7 +248,72 @@ struct ExpenseSettingsView: View {
     }
 }
 
-struct BudgetTagItem: Identifiable {
-    var tag: String
-    var id: String { tag }
+struct SetBudgetSheet: View {
+    @Binding var monthlyBudget: Double
+    var displayCurrency: String
+    var onSave: (Double) -> Void
+    
+    @Environment(\.presentationMode) var presentationMode
+    @State private var budgetText: String = ""
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Text("Set Monthly Budget")
+                    .modifier(InterFont(.bold, size: 18))
+                    .foregroundColor(Color.text_primary_color)
+                Spacer()
+                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(Color.text_secondary_color)
+                }
+            }
+            .padding(.top, 20)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Monthly Budget Amount (\(displayCurrency))")
+                    .modifier(InterFont(.medium, size: 13))
+                    .foregroundColor(Color.text_secondary_color)
+                
+                HStack {
+                    Text(symbolFor(currencyCode: displayCurrency))
+                        .modifier(InterFont(.semiBold, size: 18))
+                        .foregroundColor(Color.main_color)
+                        .padding(.leading, 12)
+                    
+                    TextField("Budget Amount", text: $budgetText)
+                        .modifier(InterFont(.semiBold, size: 18))
+                        .keyboardType(.decimalPad)
+                        .padding(.vertical, 14)
+                }
+                .background(Color.secondary_color)
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.main_color.opacity(0.2), lineWidth: 1))
+            }
+            
+            Button(action: {
+                if let val = Double(budgetText), val > 0 {
+                    monthlyBudget = val
+                    onSave(val)
+                    presentationMode.wrappedValue.dismiss()
+                }
+            }) {
+                Text("Save Budget")
+                    .modifier(InterFont(.semiBold, size: 16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.main_color)
+                    .cornerRadius(12)
+            }
+            
+            Spacer()
+        }
+        .padding(20)
+        .background(Color.primary_color.edgesIgnoringSafeArea(.all))
+        .onAppear {
+            budgetText = String(format: "%.0f", monthlyBudget)
+        }
+    }
 }

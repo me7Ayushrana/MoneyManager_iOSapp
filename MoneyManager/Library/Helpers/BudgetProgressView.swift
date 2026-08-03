@@ -95,14 +95,14 @@ struct BudgetProgressView: View {
                 .stroke(progress.limit > 0 ? statusColor.opacity(0.3) : Color.clear, lineWidth: 1)
         )
         .sheet(isPresented: $showSetBudgetSheet) {
-            SetBudgetSheet(tag: tag, currentLimit: progress.limit, displayCurrency: displayCurrency) { newLimit in
+            SetCategoryBudgetSheetView(tag: tag, currentLimit: progress.limit, displayCurrency: displayCurrency) { newLimit in
                 budgetManager.setLimit(newLimit, for: tag)
             }
         }
     }
 }
 
-struct SetBudgetSheet: View {
+struct SetCategoryBudgetSheetView: View {
     var tag: String
     var currentLimit: Double
     var displayCurrency: String

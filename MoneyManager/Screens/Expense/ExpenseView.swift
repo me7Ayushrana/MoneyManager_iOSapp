@@ -103,24 +103,9 @@ struct ExpenseView: View {
                             }
                         }
                         
-                        // Financial summary subtitle pill
-                        HStack(spacing: 6) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "arrow.up.right")
-                                    .font(.system(size: 10, weight: .bold))
-                                Text("18%")
-                                    .modifier(InterFont(.bold, size: 11))
-                            }
-                            .foregroundColor(Color.main_green)
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(Color.main_green.opacity(0.12))
-                            .cornerRadius(12)
-                            
-                            Text("You saved 18% more this month.")
-                                .modifier(InterFont(.medium, size: 13))
-                                .foregroundColor(Color.text_secondary_color)
-                        }
-                        .padding(.top, 2)
+                        // Financial summary subtitle pill (dynamic budget progress)
+                        DynamicBudgetSubtitleView()
+                            .environmentObject(exchangeService)
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, 24)
@@ -696,6 +681,59 @@ struct MonthYearPickerSheet: View {
         }
         .padding(20)
         .background(Color.primary_color.edgesIgnoringSafeArea(.all))
+    }
+}
+
+// MARK: - Dynamic Budget Subtitle Component
+
+struct DynamicBudgetSubtitleView: View {
+    @FetchRequest var expenses: FetchedResults<ExpenseCD>
+    @AppStorage(UD_MONTHLY_BUDGET) var monthlyBudget: Double = 5000.0
+    @AppStorage(UD_DISPLAY_CURRENCY) var displayCurrency: String = "INR"
+    @EnvironmentObject var exchangeService: ExchangeRateService
+    
+    init() {
+        let calendar = Calendar.current
+        let now = Date()
+        let comp = calendar.dateComponents([.year, .month], from: now)
+        let startOfMonth = calendar.date(from: comp)! as NSDate
+        
+        var endComp = DateComponents()
+        endComp.month = 1
+        endComp.second = -1
+        let endOfMonth = calendar.date(byAdding: endComp, to: startOfMonth as Date)! as NSDate
+        
+        let sort = NSSortDescriptor(key: "occuredOn", ascending: false)
+        let predicate = NSPredicate(format: "occuredOn >= %@ AND occuredOn <= %@ AND type == %@", startOfMonth, endOfMonth, TRANS_TYPE_EXPENSE)
+        _expenses = FetchRequest<ExpenseCD>(entity: ExpenseCD.entity(), sortDescriptors: [sort], predicate: predicate)
+    }
+    
+    var body: some View {
+        let totalExpenses = expenses.reduce(0.0) { acc, tx in
+            acc + exchangeService.convertedAmount(tx.amount, from: tx.resolvedCurrencyCode, to: displayCurrency)
+        }
+        
+        let percentage = monthlyBudget > 0 ? (totalExpenses / monthlyBudget) * 100.0 : 0.0
+        let percentageInt = Int(percentage.rounded())
+        let isHighUsage = percentageInt >= 80
+        
+        HStack(spacing: 6) {
+            HStack(spacing: 4) {
+                Image(systemName: isHighUsage ? "exclamationmark.triangle.fill" : "chart.line.uptrend.xyaxis")
+                    .font(.system(size: 10, weight: .bold))
+                Text("\(percentageInt)%")
+                    .modifier(InterFont(.bold, size: 11))
+            }
+            .foregroundColor(isHighUsage ? Color.main_red : Color.main_color)
+            .padding(.horizontal, 8).padding(.vertical, 3)
+            .background((isHighUsage ? Color.main_red : Color.main_color).opacity(0.12))
+            .cornerRadius(12)
+            
+            Text("You have spent \(percentageInt)% of your monthly budget.")
+                .modifier(InterFont(.medium, size: 13))
+                .foregroundColor(Color.text_secondary_color)
+        }
+        .padding(.top, 2)
     }
 }
 

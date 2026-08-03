@@ -27,6 +27,7 @@ let UD_DISPLAY_CURRENCY     = "displayCurrencyCode" // ISO code for the user's c
 let UD_EXCHANGE_RATES_CACHE = "exchangeRatesCache"
 let UD_EXCHANGE_RATES_TIMESTAMP = "exchangeRatesTimestamp"
 let UD_BUDGET_LIMITS        = "budgetLimitsV1"    // [tagKey: monthlyLimit Double]
+let UD_MONTHLY_BUDGET       = "overallMonthlyBudget" // Overall monthly budget Double
 let UD_EXISTING_TX_MIGRATED = "existingTxCurrencyMigrated" // one-time migration flag
 
 // Transaction types

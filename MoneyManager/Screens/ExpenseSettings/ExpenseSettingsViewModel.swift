@@ -27,6 +27,10 @@ class ExpenseSettingsViewModel: ObservableObject {
     @Published var alertMsg = String()
     @Published var showAlert = false
     
+    var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+    }
+    
     init() {}
         
     func authenticate() {
