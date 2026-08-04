@@ -99,7 +99,7 @@ struct ExpenseSettingsView: View {
                                 .actionSheet(isPresented: $selectDisplayCurrency) {
                                     var buttons: [ActionSheet.Button] = SUPPORTED_CURRENCIES.map { curr in
                                         .default(Text(curr.displayLabel)) {
-                                            viewModel.saveDisplayCurrency(code: curr.code)
+                                            viewModel.saveDisplayCurrency(code: curr.code, exchangeService: exchangeService)
                                         }
                                     }
                                     buttons.append(.cancel())

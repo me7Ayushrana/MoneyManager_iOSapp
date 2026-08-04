@@ -66,7 +66,18 @@ class ExpenseSettingsViewModel: ObservableObject {
         return "App Lock"
     }
     
-    func saveDisplayCurrency(code: String) {
+    func saveDisplayCurrency(code: String, exchangeService: ExchangeRateService) {
+        let oldCode = self.displayCurrency
+        guard oldCode != code else { return }
+        
+        let currentBudget = UserDefaults.standard.double(forKey: UD_MONTHLY_BUDGET)
+        if currentBudget > 0 {
+            let convertedBudget = exchangeService.convertedAmount(currentBudget, from: oldCode, to: code)
+            UserDefaults.standard.set(convertedBudget, forKey: UD_MONTHLY_BUDGET)
+        }
+        
+        BudgetManager.shared.convertLimits(from: oldCode, to: code, using: exchangeService)
+        
         self.displayCurrency = code
         UserDefaults.standard.set(code, forKey: UD_DISPLAY_CURRENCY)
     }

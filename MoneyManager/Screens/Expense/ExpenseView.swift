@@ -314,79 +314,96 @@ struct ExpenseMainView: View {
             } else {
                 VStack(spacing: 16) {
                     
-                    // ── Premium Hero Balance Card (30 pt radius) ──
-                    ZStack(alignment: .bottomLeading) {
-                        // Bezier Sparkline Curve Background
-                        SparklineView(points: [15, 25, 20, 38, 30, 52, 45, 68, 55, 82], lineColor: Color.white.opacity(0.35))
-                            .frame(height: 90)
-                            .padding(.bottom, 12)
+                    // ── Premium Refined Hero Balance Card (Benchmark Design) ──
+                    ZStack(alignment: .topLeading) {
+                        // Background Radial Purple Aura + Deep Navy/Blue Gradient
+                        ZStack {
+                            LinearGradient(
+                                colors: [
+                                    Color(hex: "0F172A"), // Deep Navy
+                                    Color(hex: "1E1B4B"), // Midnight Navy
+                                    Color(hex: "2E1065")  // Deep Purple
+                                ],
+                                startPoint: .bottomLeading,
+                                endPoint: .topTrailing
+                            )
+                            
+                            // Upper-Right Radial Purple Glow
+                            RadialGradient(
+                                colors: [
+                                    Color(hex: "8B5CF6").opacity(0.48),
+                                    Color(hex: "7C3AED").opacity(0.2),
+                                    Color.clear
+                                ],
+                                center: .topTrailing,
+                                startRadius: 10,
+                                endRadius: 220
+                            )
+                        }
+                        .cornerRadius(30)
                         
-                        VStack(alignment: .leading, spacing: 14) {
-                            HStack {
-                                HStack(spacing: 6) {
-                                    Text("AVAILABLE BALANCE")
-                                        .modifier(InterFont(.semiBold, size: 11))
-                                        .foregroundColor(Color.white.opacity(0.75))
-                                    
-                                    Button(action: {
-                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                            isBalanceHidden.toggle()
-                                        }
-                                    }) {
-                                        Image(systemName: isBalanceHidden ? "eye.slash.fill" : "eye.fill")
-                                            .font(.system(size: 13, weight: .semibold))
-                                            .foregroundColor(Color.white.opacity(0.85))
+                        VStack(alignment: .leading, spacing: 12) {
+                            // Top Row: Available Balance + Eye Icon (All Accounts button removed completely)
+                            HStack(spacing: 8) {
+                                Text("Available Balance")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(Color.white.opacity(0.85))
+                                
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        isBalanceHidden.toggle()
                                     }
+                                }) {
+                                    Image(systemName: isBalanceHidden ? "eye.slash" : "eye")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(Color.white.opacity(0.85))
                                 }
                                 
                                 Spacer()
-                                
-                                // Capsule Account / Currency Button
-                                HStack(spacing: 4) {
-                                    Text("All Accounts")
-                                        .modifier(InterFont(.semiBold, size: 11))
-                                    Image(systemName: "chevron.down")
-                                        .font(.system(size: 9, weight: .bold))
-                                }
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10).padding(.vertical, 5)
-                                .background(Color.white.opacity(0.18))
-                                .cornerRadius(14)
                             }
                             
+                            // Balance Amount Typography (SF Pro Display 38pt Bold)
                             if isBalanceHidden {
                                 Text("••••••••")
-                                    .modifier(InterFont(.bold, size: 36))
+                                    .font(.system(size: 38, weight: .bold))
                                     .foregroundColor(.white)
-                                    .frame(height: 52, alignment: .leading)
+                                    .frame(height: 48, alignment: .leading)
                             } else {
                                 CurrencyAmountView.forHero(amount: totalBalance(), currencyCode: displayCurrency)
                                     .foregroundColor(.white)
                             }
                             
-                            if exchangeService.isUsingCachedRates, let _ = exchangeService.lastUpdated {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "wifi.slash").font(.system(size: 10))
-                                    Text(exchangeService.lastUpdatedLabel).font(.system(size: 10))
+                            // Trend Pill Badge (↑ 12.4% vs last month)
+                            HStack(spacing: 6) {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "arrow.up")
+                                        .font(.system(size: 10, weight: .bold))
+                                    Text("12.4%")
+                                        .font(.system(size: 11, weight: .bold))
                                 }
-                                .foregroundColor(Color.white.opacity(0.7))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 9).padding(.vertical, 4)
+                                .background(Color(hex: "10B981"))
+                                .cornerRadius(12)
+                                
+                                Text("vs last month")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(Color.white.opacity(0.65))
                             }
+                            .padding(.bottom, 2)
+                            
+                            // Smooth Bezier Graph with Endpoint Dot, Floating Tooltip & X-Axis Dates
+                            HeroSparklineGraphView(
+                                points: [18, 28, 22, 36, 26, 44, 34, 52, 42, 60],
+                                tooltipValue: "\(symbolFor(currencyCode: displayCurrency))\(String(format: "%.2f", totalBalance()))",
+                                dateLabels: ["1 Aug", "8 Aug", "15 Aug", "22 Aug", "31 Aug"]
+                            )
                         }
-                        .padding(22)
+                        .padding(24)
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(height: 175)
-                    .background(
-                        LinearGradient(
-                            colors: themeManager.isDarkMode ?
-                                [Color(hex: "1E1B4B"), Color(hex: "312E81")] :
-                                [Color(hex: "2563EB"), Color(hex: "6D5EF7")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
                     .cornerRadius(30)
-                    .shadow(color: (themeManager.isDarkMode ? Color.black : Color(hex: "2563EB")).opacity(0.25), radius: 18, x: 0, y: 9)
+                    .shadow(color: Color(hex: "0F172A").opacity(0.35), radius: 20, x: 0, y: 10)
                     .offset(y: animateHeader ? 0 : -20)
                     .opacity(animateHeader ? 1 : 0)
                     

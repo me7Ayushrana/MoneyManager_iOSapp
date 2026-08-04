@@ -66,6 +66,17 @@ class BudgetManager: ObservableObject {
     
     func limit(for tag: String) -> Double? { limits[tag] }
     
+    /// Converts all category limits when the user changes Display Currency.
+    func convertLimits(from oldCode: String, to newCode: String, using exchangeService: ExchangeRateService) {
+        guard oldCode != newCode else { return }
+        var updated = [String: Double]()
+        for (tag, val) in limits {
+            let converted = exchangeService.convertedAmount(val, from: oldCode, to: newCode)
+            updated[tag] = converted
+        }
+        limits = updated
+    }
+    
     /// Compute budget progress for a category given the total converted spend this month.
     func progress(for tag: String, spent: Double) -> BudgetProgress {
         guard let limit = limits[tag], limit > 0 else {
