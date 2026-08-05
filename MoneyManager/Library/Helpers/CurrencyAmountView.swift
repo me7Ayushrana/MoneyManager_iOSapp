@@ -77,14 +77,14 @@ extension CurrencyAmountView {
         )
     }
     
-    /// Creates a hero amount for the dashboard total balance card with automatic negative red coloring.
+    /// Creates a hero amount for the dashboard total balance card with pure white text and automatic negative red coloring.
     static func forHero(amount: Double, currencyCode: String) -> CurrencyAmountView {
-        let color: Color = amount < 0 ? Color.main_red : Color.text_primary_color
+        let color: Color = amount < 0 ? Color.main_red : Color.white
         return CurrencyAmountView(
             amount: amount,
             currencyCode: currencyCode,
-            amountType: .h5,
-            codeType: .subtitle_2,
+            amountType: .h3,
+            codeType: .h6,
             color: color
         )
     }

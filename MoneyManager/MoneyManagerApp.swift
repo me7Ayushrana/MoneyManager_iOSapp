@@ -20,6 +20,9 @@ struct MoneyManagerApp: App {
     }
     
     private func setDefaultPreferences() {
+        if UserDefaults.standard.object(forKey: "isDarkMode") == nil {
+            UserDefaults.standard.set(true, forKey: "isDarkMode")
+        }
         // Set Display Currency from device locale on first launch
         if UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) == nil {
             let localeCode = Locale.current.currencyCode ?? "INR"
