@@ -1,19 +1,11 @@
-![GitHub Cards Preview](https://github.com/sameersyd/MoneyManager/blob/main/art/MONEYMANAGER_COVER.png?raw=true)
-
-# MoneyManager
-A Simple Expense Tracker App 📱 built to demonstrate the use of SwiftUI, CoreData, Charts, Biometrics (Face & Touch ID), Export CSV and MVVM Architecture 🏗. *Made with love ❤️ by Ayush Rana 
-
-<br />
-
-## UI Design 🎨
-<br />
-
+# TrackMint
+A Premium Fintech Expense Tracker App 📱 built with SwiftUI, CoreData, Live Exchange Rates, Biometrics (Face & Touch ID), Category Budgets, Export CSV, and MVVM Architecture 🏗.
 
 <br />
 
 ## Project Structure
     
-    MoneyManager # Target
+    TrackMint # Target
     |
     ├── CoreData            # CoreData ManagedObject
     |

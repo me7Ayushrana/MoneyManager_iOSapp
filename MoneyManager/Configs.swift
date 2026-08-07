@@ -8,9 +8,9 @@
 import Foundation
 
 // App Globals
-let APP_NAME = "MoneyManager"
-let APP_LINK = "https://github.com/sameersyd/MoneyManager"
-let SHARED_FROM_MONEYMANAGER = """
+let APP_NAME = "TrackMint"
+let APP_LINK = "https://github.com/me7Ayushrana/MoneyManager_iOSapp"
+let SHARED_FROM_TRACKMINT = """
     Shared from \(APP_NAME) App: \(APP_LINK)
     """
 
