@@ -154,6 +154,57 @@ struct AddExpenseView: View {
                                 ])
                             }
                             
+                            // Smart Category Suggestion Chips
+                            if !viewModel.suggestedCategories.isEmpty {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "sparkles")
+                                            .font(.system(size: 11, weight: .bold))
+                                            .foregroundColor(Color.main_color)
+                                        Text("SUGGESTED CATEGORY")
+                                            .modifier(InterFont(.semiBold, size: 10))
+                                            .foregroundColor(Color.text_secondary_color)
+                                    }
+                                    .padding(.leading, 4)
+                                    
+                                    HStack(spacing: 8) {
+                                        ForEach(viewModel.suggestedCategories) { suggestion in
+                                            Button(action: {
+                                                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                                                    viewModel.selectedTag = suggestion.tagKey
+                                                    viewModel.tagTitle = suggestion.tagTitle
+                                                }
+                                            }) {
+                                                HStack(spacing: 6) {
+                                                    Image(suggestion.iconName)
+                                                        .resizable().scaledToFit()
+                                                        .frame(width: 16, height: 16)
+                                                    Text(suggestion.tagTitle)
+                                                        .modifier(InterFont(.semiBold, size: 13))
+                                                    if viewModel.selectedTag == suggestion.tagKey {
+                                                        Image(systemName: "checkmark.circle.fill")
+                                                            .font(.system(size: 12))
+                                                    }
+                                                }
+                                                .foregroundColor(viewModel.selectedTag == suggestion.tagKey ? .white : Color.text_primary_color)
+                                                .padding(.horizontal, 12).padding(.vertical, 8)
+                                                .background(
+                                                    viewModel.selectedTag == suggestion.tagKey ?
+                                                    Color.main_color : Color.main_color.opacity(0.12)
+                                                )
+                                                .cornerRadius(16)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 16)
+                                                        .stroke(Color.main_color.opacity(0.3), lineWidth: 1)
+                                                )
+                                            }
+                                        }
+                                        Spacer()
+                                    }
+                                }
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+                            
                             // Category (Tag) Picker Button
                             Button(action: { viewModel.showTagDrop = true }) {
                                 HStack {

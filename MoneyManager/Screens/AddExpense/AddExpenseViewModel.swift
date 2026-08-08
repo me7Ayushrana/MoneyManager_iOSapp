@@ -6,7 +6,9 @@
 //
 
 import UIKit
+import Combine
 import CoreData
+import SwiftUI
 
 class AddExpenseViewModel: ObservableObject {
     
@@ -23,6 +25,10 @@ class AddExpenseViewModel: ObservableObject {
     
     @Published var selectedType = TRANS_TYPE_INCOME
     @Published var selectedTag = TRANS_TAG_TRANSPORT
+    
+    /// Smart category suggestions powered by NLEmbedding
+    @Published var suggestedCategories: [CategorySuggestion] = []
+    private var cancellableTitle: AnyCancellable?
     
     /// ISO currency code for this transaction — defaults to user's Display Currency
     @Published var selectedCurrencyCode: String = UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) ?? "INR"
@@ -57,6 +63,18 @@ class AddExpenseViewModel: ObservableObject {
         if let data = expenseObj?.imageAttached {
             self.imageAttached = UIImage(data: data)
         }
+        
+        // Debounce title typing by 300ms for smart category suggestions
+        cancellableTitle = $title
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .sink { [weak self] text in
+                guard let self = self else { return }
+                let suggestions = SmartCategoryManager.shared.suggestCategories(for: text)
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                    self.suggestedCategories = suggestions
+                }
+            }
         
         AttachmentHandler.shared.imagePickedBlock = { [weak self] image in
             self?.imageUpdated = true
@@ -144,6 +162,10 @@ class AddExpenseViewModel: ObservableObject {
         expense.note = note
         expense.amount = amountVal
         expense.currencyCode = selectedCurrencyCode
+        
+        // On-device learning: learn title word tokens for selected category
+        SmartCategoryManager.shared.learnKeywords(from: titleStr, for: selectedTag)
+        
         do {
             try managedObjectContext.save()
             closePresenter = true

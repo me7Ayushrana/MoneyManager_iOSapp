@@ -29,6 +29,7 @@ let UD_EXCHANGE_RATES_TIMESTAMP = "exchangeRatesTimestamp"
 let UD_BUDGET_LIMITS        = "budgetLimitsV1"    // [tagKey: monthlyLimit Double]
 let UD_MONTHLY_BUDGET       = "overallMonthlyBudget" // Overall monthly budget Double
 let UD_EXISTING_TX_MIGRATED = "existingTxCurrencyMigrated" // one-time migration flag
+let UD_CATEGORY_KEYWORDS    = "categoryKeywordsV1" // [tagKey: [String]] custom keyword mapping
 
 // Transaction types
 let TRANS_TYPE_INCOME  = "income"
