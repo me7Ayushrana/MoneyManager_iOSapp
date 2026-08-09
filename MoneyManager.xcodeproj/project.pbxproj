@@ -53,6 +53,8 @@
 		FF46CBDF1D92154A86BC64BD /* ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6C4009BD6BAC4C9AB0588E /* ExchangeRateService.swift */; };
 		FFC623DAD12BAA43ACA78AD0 /* BudgetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF38F5D50C39D144D8B94AC4 /* BudgetManager.swift */; };
 		FF890A12B3456789C0123456 /* SmartCategoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF901B23C4567890D1234567 /* SmartCategoryManager.swift */; };
+		FF789A12B3456789C0123457 /* VoiceExpenseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF789B23C4567890D1234578 /* VoiceExpenseParser.swift */; };
+		FF789A12B3456789C0123458 /* SpeechRecognizerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF789B23C4567890D1234579 /* SpeechRecognizerService.swift */; };
 		FFE7E6D4917C7142D581524D /* CurrencyAmountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7395096DE46D47DC95CD80 /* CurrencyAmountView.swift */; };
 		FF602276AF79054AE286B1EE /* BudgetProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA75E5973506A4143AA18FB /* BudgetProgressView.swift */; };
 		FFC7B63287501040FCBA5329 /* CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFDF864ACE006B41C5809BE5 /* CalculatorView.swift */; };
@@ -110,6 +112,8 @@
 		FF6C4009BD6BAC4C9AB0588E /* ExchangeRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/ExchangeRateService.swift"; sourceTree = "<group>"; };
 		FF38F5D50C39D144D8B94AC4 /* BudgetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/BudgetManager.swift"; sourceTree = "<group>"; };
 		FF901B23C4567890D1234567 /* SmartCategoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/SmartCategoryManager.swift"; sourceTree = "<group>"; };
+		FF789B23C4567890D1234578 /* VoiceExpenseParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/VoiceExpenseParser.swift"; sourceTree = "<group>"; };
+		FF789B23C4567890D1234579 /* SpeechRecognizerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/SpeechRecognizerService.swift"; sourceTree = "<group>"; };
 		FF7395096DE46D47DC95CD80 /* CurrencyAmountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/CurrencyAmountView.swift"; sourceTree = "<group>"; };
 		FFA75E5973506A4143AA18FB /* BudgetProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/BudgetProgressView.swift"; sourceTree = "<group>"; };
 		FFDF864ACE006B41C5809BE5 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/CalculatorView.swift"; sourceTree = "<group>"; };
@@ -470,6 +474,8 @@
 				FF46CBDF1D92154A86BC64BD /* ExchangeRateService.swift in Sources */,
 				FFC623DAD12BAA43ACA78AD0 /* BudgetManager.swift in Sources */,
 				FF890A12B3456789C0123456 /* SmartCategoryManager.swift in Sources */,
+				FF789A12B3456789C0123457 /* VoiceExpenseParser.swift in Sources */,
+				FF789A12B3456789C0123458 /* SpeechRecognizerService.swift in Sources */,
 				FFE7E6D4917C7142D581524D /* CurrencyAmountView.swift in Sources */,
 				FF602276AF79054AE286B1EE /* BudgetProgressView.swift in Sources */,
 				738B1C3825C661750067407B /* ExpenseView.swift in Sources */,

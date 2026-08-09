@@ -58,17 +58,77 @@ struct AddExpenseView: View {
                                       },
                                       secondaryButton: .cancel(Text("Cancel"), action: { confirmDelete = false }))
                             })
+                    .alert(isPresented: $viewModel.showVoicePermissionAlert) {
+                        Alert(
+                            title: Text("Microphone Access Required"),
+                            message: Text("TrackMint requires Speech Recognition and Microphone access for voice dictation. Please enable them in iOS Settings."),
+                            primaryButton: .default(Text("Settings"), action: {
+                                if let url = URL(string: UIApplication.openSettingsURLString) {
+                                    UIApplication.shared.open(url)
+                                }
+                            }),
+                            secondaryButton: .cancel(Text("Cancel"))
+                        )
+                    }
                     
                     ScrollView(showsIndicators: true) {
                         VStack(spacing: 12) {
                             
-                            // Title
-                            TextField("Title", text: $viewModel.title)
-                                .modifier(InterFont(.regular, size: 16))
-                                .accentColor(Color.text_primary_color)
-                                .frame(height: 50).padding(.leading, 16)
-                                .background(Color.secondary_color)
+                            // Title + Voice Dictation Button
+                            HStack(spacing: 8) {
+                                TextField("Title", text: $viewModel.title)
+                                    .modifier(InterFont(.regular, size: 16))
+                                    .accentColor(Color.text_primary_color)
+                                    .frame(height: 50).padding(.leading, 16)
+                                
+                                Button(action: { viewModel.toggleVoiceDictation() }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: viewModel.speechRecognizer.isRecording ? "mic.fill" : "mic")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(viewModel.speechRecognizer.isRecording ? .white : Color.main_color)
+                                        if viewModel.speechRecognizer.isRecording {
+                                            Text("Listening...")
+                                                .modifier(InterFont(.semiBold, size: 12))
+                                                .foregroundColor(.white)
+                                        }
+                                    }
+                                    .padding(.horizontal, 12).frame(height: 50)
+                                    .background(viewModel.speechRecognizer.isRecording ? Color.main_red : Color.main_color.opacity(0.14))
+                                    .cornerRadius(8)
+                                }
+                                .padding(.trailing, 8)
+                            }
+                            .background(Color.secondary_color)
+                            .cornerRadius(8)
+                            
+                            // Live Voice Dictation Recording Card
+                            if viewModel.speechRecognizer.isRecording {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack {
+                                        Circle()
+                                            .fill(Color.main_red)
+                                            .frame(width: 8, height: 8)
+                                        Text("DICTATING VOICE EXPENSE")
+                                            .modifier(InterFont(.semiBold, size: 10))
+                                            .foregroundColor(Color.main_red)
+                                        Spacer()
+                                        Text("Tap mic to stop")
+                                            .modifier(InterFont(.regular, size: 10))
+                                            .foregroundColor(Color.text_secondary_color)
+                                    }
+                                    Text(viewModel.voiceTranscript.isEmpty ? "Speak e.g. \"spent 200 rupees on coffee today\"..." : viewModel.voiceTranscript)
+                                        .modifier(InterFont(.medium, size: 14))
+                                        .foregroundColor(Color.text_primary_color)
+                                }
+                                .padding(12)
+                                .background(Color.main_red.opacity(0.08))
                                 .cornerRadius(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.main_red.opacity(0.3), lineWidth: 1)
+                                )
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
                             
                             // Amount + currency symbol prefix + prominent calculator toggle
                             VStack(spacing: 8) {

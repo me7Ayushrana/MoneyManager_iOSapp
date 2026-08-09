@@ -30,6 +30,11 @@ class AddExpenseViewModel: ObservableObject {
     @Published var suggestedCategories: [CategorySuggestion] = []
     private var cancellableTitle: AnyCancellable?
     
+    /// Voice dictation service & transcript
+    @ObservedObject var speechRecognizer = SpeechRecognizerService()
+    @Published var voiceTranscript: String = ""
+    @Published var showVoicePermissionAlert = false
+    
     /// ISO currency code for this transaction — defaults to user's Display Currency
     @Published var selectedCurrencyCode: String = UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) ?? "INR"
     @Published var showCurrencyPicker = false
@@ -41,6 +46,41 @@ class AddExpenseViewModel: ObservableObject {
     @Published var alertMsg = String()
     @Published var showAlert = false
     @Published var closePresenter = false
+    
+    func toggleVoiceDictation() {
+        if speechRecognizer.permissionDenied {
+            showVoicePermissionAlert = true
+            return
+        }
+        
+        speechRecognizer.toggleRecording { [weak self] partialText in
+            self?.voiceTranscript = partialText
+        } onCompletion: { [weak self] finalTranscript in
+            guard let self = self, !finalTranscript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+            self.applyVoiceTranscript(finalTranscript)
+        }
+    }
+    
+    func applyVoiceTranscript(_ rawText: String) {
+        let parsed = VoiceExpenseParser.shared.parse(rawText, defaultCurrency: selectedCurrencyCode)
+        
+        self.title = parsed.title
+        
+        if let amt = parsed.amount {
+            self.amount = amt.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", amt) : String(format: "%.2f", amt)
+        }
+        
+        if let curr = parsed.currencyCode {
+            self.selectedCurrencyCode = curr
+        }
+        
+        self.occuredOn = parsed.date
+        
+        if let tagKey = parsed.suggestedTagKey {
+            self.selectedTag = tagKey
+            self.tagTitle = getTransTagTitle(transTag: tagKey)
+        }
+    }
     
     init(expenseObj: ExpenseCD? = nil) {
         self.expenseObj = expenseObj

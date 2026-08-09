@@ -28,6 +28,10 @@
 	<string>Face ID is used to authenticate user into app</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Photo library is used to attach media files to your transactions</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>TrackMint uses your microphone for voice expense dictation</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>TrackMint uses speech recognition to convert your spoken expenses into structured entries</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Photo library is used to attach media files to your transactions</string>
 	<key>UIAppFonts</key>
