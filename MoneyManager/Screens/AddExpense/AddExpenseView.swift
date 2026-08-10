@@ -74,12 +74,74 @@ struct AddExpenseView: View {
                     ScrollView(showsIndicators: true) {
                         VStack(spacing: 12) {
                             
-                            // Title + Voice Dictation Button
+                            // Receipt Scanned Banner
+                            if viewModel.isReceiptScannedBanner {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "doc.text.viewfinder")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(Color.main_color)
+                                    Text("Receipt Scanned — Please verify details")
+                                        .modifier(InterFont(.medium, size: 12))
+                                        .foregroundColor(Color.text_primary_color)
+                                    Spacer()
+                                    Button(action: {
+                                        withAnimation { viewModel.isReceiptScannedBanner = false }
+                                    }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(Color.text_secondary_color)
+                                    }
+                                }
+                                .padding(12)
+                                .background(Color.main_color.opacity(0.12))
+                                .cornerRadius(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.main_color.opacity(0.3), lineWidth: 1)
+                                )
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+                            
+                            // Title + Voice Dictation & Scan Receipt Buttons
                             HStack(spacing: 8) {
                                 TextField("Title", text: $viewModel.title)
                                     .modifier(InterFont(.regular, size: 16))
                                     .accentColor(Color.text_primary_color)
                                     .frame(height: 50).padding(.leading, 16)
+                                
+                                Button(action: { viewModel.showReceiptOptions = true }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "camera.viewfinder")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(Color.main_color)
+                                        Text("Scan")
+                                            .modifier(InterFont(.semiBold, size: 12))
+                                            .foregroundColor(Color.main_color)
+                                    }
+                                    .padding(.horizontal, 10).frame(height: 50)
+                                    .background(Color.main_color.opacity(0.14))
+                                    .cornerRadius(8)
+                                }
+                                .actionSheet(isPresented: $viewModel.showReceiptOptions) {
+                                    ActionSheet(title: Text("Scan Receipt"), message: Text("Choose receipt scanning option"), buttons: [
+                                        .default(Text("🖼️ Pick Receipt Photo (Simulator & Photos)")) {
+                                            AttachmentHandler.shared.imagePickedBlock = { image in
+                                                viewModel.processReceiptImage(image)
+                                            }
+                                            AttachmentHandler.shared.showAttachmentActionSheet()
+                                        },
+                                        .default(Text("📷 Live Camera Scan (iOS 16+)")) {
+                                            if #available(iOS 16.0, *) {
+                                                viewModel.showLiveScanner = true
+                                            } else {
+                                                AttachmentHandler.shared.imagePickedBlock = { image in
+                                                    viewModel.processReceiptImage(image)
+                                                }
+                                                AttachmentHandler.shared.showAttachmentActionSheet()
+                                            }
+                                        },
+                                        .cancel()
+                                    ])
+                                }
                                 
                                 Button(action: { viewModel.toggleVoiceDictation() }) {
                                     HStack(spacing: 4) {
@@ -92,7 +154,7 @@ struct AddExpenseView: View {
                                                 .foregroundColor(.white)
                                         }
                                     }
-                                    .padding(.horizontal, 12).frame(height: 50)
+                                    .padding(.horizontal, 10).frame(height: 50)
                                     .background(viewModel.speechRecognizer.isRecording ? Color.main_red : Color.main_color.opacity(0.14))
                                     .cornerRadius(8)
                                 }
@@ -425,5 +487,22 @@ struct AddExpenseView: View {
             if close { self.presentationMode.wrappedValue.dismiss() }
         }
         .preferredColorScheme(themeManager.isDarkMode ? .dark : .light)
+        .sheet(isPresented: $viewModel.showLiveScanner) {
+            if #available(iOS 16.0, *) {
+                DataScannerView(isPresented: $viewModel.showLiveScanner) { lines in
+                    let parsed = ReceiptScannerService.shared.parseTextLines(lines)
+                    if let merchant = parsed.merchantName { viewModel.title = merchant }
+                    if let amt = parsed.totalAmount {
+                        viewModel.amount = amt.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", amt) : String(format: "%.2f", amt)
+                    }
+                    if let dt = parsed.date { viewModel.occuredOn = dt }
+                    if let tagKey = parsed.suggestedTagKey {
+                        viewModel.selectedTag = tagKey
+                        viewModel.tagTitle = getTransTagTitle(transTag: tagKey)
+                    }
+                    withAnimation { viewModel.isReceiptScannedBanner = true }
+                }
+            }
+        }
     }
 }

@@ -35,6 +35,12 @@ class AddExpenseViewModel: ObservableObject {
     @Published var voiceTranscript: String = ""
     @Published var showVoicePermissionAlert = false
     
+    /// Receipt Scanner properties
+    @Published var isReceiptScannedBanner = false
+    @Published var showReceiptOptions = false
+    @Published var showLiveScanner = false
+    @Published var showReceiptPhotoPicker = false
+    
     /// ISO currency code for this transaction — defaults to user's Display Currency
     @Published var selectedCurrencyCode: String = UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) ?? "INR"
     @Published var showCurrencyPicker = false
@@ -46,6 +52,38 @@ class AddExpenseViewModel: ObservableObject {
     @Published var alertMsg = String()
     @Published var showAlert = false
     @Published var closePresenter = false
+    
+    func processReceiptImage(_ image: UIImage) {
+        self.imageAttached = image
+        self.imageUpdated = true
+        
+        ReceiptScannerService.shared.processReceiptImage(image) { [weak self] parsed in
+            guard let self = self else { return }
+            
+            if let merchant = parsed.merchantName {
+                self.title = merchant
+            }
+            
+            if let amt = parsed.totalAmount {
+                self.amount = amt.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", amt) : String(format: "%.2f", amt)
+            } else {
+                self.amount = ""
+            }
+            
+            if let dt = parsed.date {
+                self.occuredOn = dt
+            }
+            
+            if let tagKey = parsed.suggestedTagKey {
+                self.selectedTag = tagKey
+                self.tagTitle = getTransTagTitle(transTag: tagKey)
+            }
+            
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                self.isReceiptScannedBanner = true
+            }
+        }
+    }
     
     func toggleVoiceDictation() {
         if speechRecognizer.permissionDenied {
