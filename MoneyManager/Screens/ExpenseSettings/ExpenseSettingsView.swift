@@ -14,6 +14,7 @@ struct ExpenseSettingsView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var exchangeService: ExchangeRateService
     @EnvironmentObject var budgetManager: BudgetManager
+    @EnvironmentObject var authManager: AppleAuthManager
     
     @ObservedObject private var viewModel = ExpenseSettingsViewModel()
     @AppStorage(UD_MONTHLY_BUDGET) var monthlyBudget: Double = 5000.0
@@ -21,6 +22,7 @@ struct ExpenseSettingsView: View {
     @State private var selectDisplayCurrency = false
     @State private var showBudgetSheet = false
     @State private var selectedBudgetTag: String? = nil
+    @State private var showSignOutAlert = false
     
     let tagOptions = [
         TRANS_TAG_TRANSPORT, TRANS_TAG_FOOD, TRANS_TAG_HOUSING,
@@ -201,6 +203,51 @@ struct ExpenseSettingsView: View {
                                         .onTapGesture {
                                             selectedBudgetTag = tagKey
                                         }
+                                }
+                            }
+                            
+                            // ── ACCOUNT & CLOUD SYNC SECTION ──
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("ACCOUNT & CLOUD")
+                                    .modifier(InterFont(.semiBold, size: 11))
+                                    .foregroundColor(Color.text_secondary_color)
+                                    .padding(.horizontal, 4)
+                                
+                                Button(action: { showSignOutAlert = true }) {
+                                    HStack {
+                                        Image(systemName: "applelogo")
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(Color.main_red)
+                                            .frame(width: 36, height: 36)
+                                            .background(Color.main_red.opacity(0.12))
+                                            .cornerRadius(10)
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            TextView(text: "Sign Out of Apple ID", type: .button)
+                                                .foregroundColor(Color.main_red)
+                                            Text(authManager.userEmail ?? "Signed in via Apple")
+                                                .modifier(InterFont(.regular, size: 12))
+                                                .foregroundColor(Color.text_secondary_color)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(Color.main_red)
+                                    }
+                                    .padding(14)
+                                    .background(Color.secondary_color)
+                                    .cornerRadius(12)
+                                }
+                                .alert(isPresented: $showSignOutAlert) {
+                                    Alert(
+                                        title: Text("Sign Out"),
+                                        message: Text("Are you sure you want to sign out? Your local data will remain saved on this device."),
+                                        primaryButton: .destructive(Text("Sign Out")) {
+                                            authManager.signOut()
+                                            self.presentationMode.wrappedValue.dismiss()
+                                        },
+                                        secondaryButton: .cancel()
+                                    )
                                 }
                             }
                             

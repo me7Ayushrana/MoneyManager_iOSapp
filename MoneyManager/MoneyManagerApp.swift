@@ -39,10 +39,15 @@ struct MoneyManagerApp: App {
         }
     }
     
+    @StateObject private var authManager       = AppleAuthManager.shared
+    @StateObject private var syncMonitor       = CloudKitSyncMonitor.shared
+    
     var body: some Scene {
         WindowGroup {
             Group {
-                if UserDefaults.standard.bool(forKey: UD_USE_BIOMETRIC) {
+                if !authManager.isAuthenticated {
+                    AppleSignInView()
+                } else if UserDefaults.standard.bool(forKey: UD_USE_BIOMETRIC) {
                     AuthenticateView(viewModel: AuthenticationViewModel())
                         .environment(\.managedObjectContext, persistentContainer.viewContext)
                 } else {
@@ -53,22 +58,28 @@ struct MoneyManagerApp: App {
             .environmentObject(themeManager)
             .environmentObject(exchangeService)
             .environmentObject(budgetManager)
+            .environmentObject(authManager)
+            .environmentObject(syncMonitor)
             .preferredColorScheme(themeManager.isDarkMode ? .dark : .light)
         }
     }
     
-    var persistentContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "MoneyManager")
-        // Enable lightweight automatic migration so v1→v2 (adding currencyCode) is seamless
+    var persistentContainer: NSPersistentCloudKitContainer = {
+        let container = NSPersistentCloudKitContainer(name: "MoneyManager")
         let storeDescription = container.persistentStoreDescriptions.first
+        
         storeDescription?.shouldMigrateStoreAutomatically = true
         storeDescription?.shouldInferMappingModelAutomatically = true
+        storeDescription?.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        storeDescription?.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+        
         container.loadPersistentStores { _, error in
             if let error = error as NSError? {
-                print("⚠️ CoreData load error: \(error), \(error.userInfo)")
+                print("⚠️ CoreData/CloudKit load error: \(error), \(error.userInfo)")
             }
         }
         container.viewContext.automaticallyMergesChangesFromParent = true
+        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         return container
     }()
 }

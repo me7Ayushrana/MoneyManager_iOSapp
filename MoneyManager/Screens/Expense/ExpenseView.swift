@@ -20,6 +20,7 @@ struct ExpenseView: View {
     @Environment(\.managedObjectContext) var managedObjectContext
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var exchangeService: ExchangeRateService
+    @EnvironmentObject var syncMonitor: CloudKitSyncMonitor
     
     @AppStorage(UD_DISPLAY_CURRENCY) var displayCurrency: String = "INR"
     
@@ -38,9 +39,10 @@ struct ExpenseView: View {
     private var greetingText: String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
-        case 0..<12:  return "Good Morning,"
-        case 12..<17: return "Good Afternoon,"
-        default:      return "Good Evening,"
+        case 5..<12:  return "Good Morning"
+        case 12..<17: return "Good Afternoon"
+        case 17..<22: return "Good Evening"
+        default:      return "Good Night"
         }
     }
     
@@ -62,6 +64,20 @@ struct ExpenseView: View {
                                     Text("Ayush 👋")
                                         .modifier(InterFont(.bold, size: 28))
                                         .foregroundColor(Color.text_primary_color)
+                                    
+                                    if syncMonitor.isSyncing {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "icloud.and.arrow.down.fill")
+                                                .font(.system(size: 10, weight: .bold))
+                                            Text("Syncing")
+                                                .modifier(InterFont(.semiBold, size: 10))
+                                        }
+                                        .foregroundColor(Color.main_color)
+                                        .padding(.horizontal, 8).padding(.vertical, 4)
+                                        .background(Color.main_color.opacity(0.12))
+                                        .cornerRadius(10)
+                                        .transition(.opacity)
+                                    }
                                 }
                             }
                             

@@ -57,6 +57,10 @@
 		FF789A12B3456789C0123458 /* SpeechRecognizerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF789B23C4567890D1234579 /* SpeechRecognizerService.swift */; };
 		FF987A12B3456789C0123480 /* ReceiptScannerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF987B23C4567890D123481 /* ReceiptScannerService.swift */; };
 		FF987A12B3456789C0123482 /* DataScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF987B23C4567890D123483 /* DataScannerView.swift */; };
+		FFA11A12B3456789C0123490 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123491 /* KeychainHelper.swift */; };
+		FFA11A12B3456789C0123492 /* AppleAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123493 /* AppleAuthManager.swift */; };
+		FFA11A12B3456789C0123494 /* AppleSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123495 /* AppleSignInView.swift */; };
+		FFA11A12B3456789C0123496 /* CloudKitSyncMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123497 /* CloudKitSyncMonitor.swift */; };
 		FFE7E6D4917C7142D581524D /* CurrencyAmountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7395096DE46D47DC95CD80 /* CurrencyAmountView.swift */; };
 		FF602276AF79054AE286B1EE /* BudgetProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA75E5973506A4143AA18FB /* BudgetProgressView.swift */; };
 		FFC7B63287501040FCBA5329 /* CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFDF864ACE006B41C5809BE5 /* CalculatorView.swift */; };
@@ -118,6 +122,10 @@
 		FF789B23C4567890D1234579 /* SpeechRecognizerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/SpeechRecognizerService.swift"; sourceTree = "<group>"; };
 		FF987B23C4567890D123481 /* ReceiptScannerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/ReceiptScannerService.swift"; sourceTree = "<group>"; };
 		FF987B23C4567890D123483 /* DataScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/DataScannerView.swift"; sourceTree = "<group>"; };
+		FFA11B23C4567890D123491 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/KeychainHelper.swift"; sourceTree = "<group>"; };
+		FFA11B23C4567890D123493 /* AppleAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/AppleAuthManager.swift"; sourceTree = "<group>"; };
+		FFA11B23C4567890D123495 /* AppleSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Screens/Authenticate/AppleSignInView.swift"; sourceTree = "<group>"; };
+		FFA11B23C4567890D123497 /* CloudKitSyncMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/CloudKitSyncMonitor.swift"; sourceTree = "<group>"; };
 		FF7395096DE46D47DC95CD80 /* CurrencyAmountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/CurrencyAmountView.swift"; sourceTree = "<group>"; };
 		FFA75E5973506A4143AA18FB /* BudgetProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/BudgetProgressView.swift"; sourceTree = "<group>"; };
 		FFDF864ACE006B41C5809BE5 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/CalculatorView.swift"; sourceTree = "<group>"; };
@@ -482,6 +490,10 @@
 				FF789A12B3456789C0123458 /* SpeechRecognizerService.swift in Sources */,
 				FF987A12B3456789C0123480 /* ReceiptScannerService.swift in Sources */,
 				FF987A12B3456789C0123482 /* DataScannerView.swift in Sources */,
+				FFA11A12B3456789C0123490 /* KeychainHelper.swift in Sources */,
+				FFA11A12B3456789C0123492 /* AppleAuthManager.swift in Sources */,
+				FFA11A12B3456789C0123494 /* AppleSignInView.swift in Sources */,
+				FFA11A12B3456789C0123496 /* CloudKitSyncMonitor.swift in Sources */,
 				FFE7E6D4917C7142D581524D /* CurrencyAmountView.swift in Sources */,
 				FF602276AF79054AE286B1EE /* BudgetProgressView.swift in Sources */,
 				738B1C3825C661750067407B /* ExpenseView.swift in Sources */,
