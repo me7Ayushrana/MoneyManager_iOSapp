@@ -96,6 +96,7 @@ struct SparklineView: View {
 struct HeroSparklineGraphView: View {
     var points: [CGFloat] = [18, 28, 22, 36, 26, 44, 34, 52, 42, 60]
     var tooltipValue: String = "₹5,970.50"
+    var isHidden: Bool = false
     var dateLabels: [String] = ["1 Aug", "8 Aug", "15 Aug", "22 Aug", "31 Aug"]
     
     @State private var drawProgress: CGFloat = 0
@@ -137,7 +138,7 @@ struct HeroSparklineGraphView: View {
                     
                     // Floating Tooltip Badge above Endpoint
                     VStack(spacing: 0) {
-                        Text(tooltipValue)
+                        Text(isHidden ? "••••••••" : tooltipValue)
                             .font(.system(size: 11, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.horizontal, 9)

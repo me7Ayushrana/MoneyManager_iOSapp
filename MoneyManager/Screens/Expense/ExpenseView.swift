@@ -412,6 +412,7 @@ struct ExpenseMainView: View {
                             HeroSparklineGraphView(
                                 points: [18, 28, 22, 36, 26, 44, 34, 52, 42, 60],
                                 tooltipValue: "\(symbolFor(currencyCode: displayCurrency))\(String(format: "%.2f", totalBalance()))",
+                                isHidden: isBalanceHidden,
                                 dateLabels: ["1 Aug", "8 Aug", "15 Aug", "22 Aug", "31 Aug"]
                             )
                         }
