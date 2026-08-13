@@ -22,6 +22,8 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>TrackMint uses your camera to scan receipt photos and attach media files to transactions</string>
 	<key>NSFaceIDUsageDescription</key>

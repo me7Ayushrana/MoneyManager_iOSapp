@@ -246,6 +246,42 @@ class AddExpenseViewModel: ObservableObject {
         
         do {
             try managedObjectContext.save()
+            
+            // Evaluate ActivityKit Live Activity for budget category
+            if #available(iOS 16.2, *) {
+                let displayCurrency = UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) ?? "INR"
+                let symbol = currencySymbol(from: displayCurrency)
+                let limit = BudgetManager.shared.limit(for: selectedTag) ?? 0
+                if limit > 0 {
+                    let fetchRequest = NSFetchRequest<ExpenseCD>(entityName: "ExpenseCD")
+                    let calendar = Calendar.current
+                    let now = Date()
+                    let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+                    let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth) ?? now
+                    
+                    fetchRequest.predicate = NSPredicate(
+                        format: "tag == %@ AND type == %@ AND occuredOn >= %@ AND occuredOn <= %@",
+                        selectedTag, TRANS_TYPE_EXPENSE, startOfMonth as NSDate, endOfMonth as NSDate
+                    )
+                    
+                    if let items = try? managedObjectContext.fetch(fetchRequest) {
+                        var totalSpent: Double = 0.0
+                        for item in items {
+                            let code = item.resolvedCurrencyCode
+                            let converted = ExchangeRateService.shared.convertedAmount(item.amount, from: code, to: displayCurrency)
+                            totalSpent += converted
+                        }
+                        
+                        BudgetLiveActivityManager.shared.evaluateCategoryBudget(
+                            tag: selectedTag,
+                            spent: totalSpent,
+                            limit: limit,
+                            currencySymbol: symbol
+                        )
+                    }
+                }
+            }
+            
             closePresenter = true
         } catch { alertMsg = "\(error)"; showAlert = true }
     }
