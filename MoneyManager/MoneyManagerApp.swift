@@ -45,9 +45,7 @@ struct MoneyManagerApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if !authManager.isAuthenticated {
-                    AppleSignInView()
-                } else if UserDefaults.standard.bool(forKey: UD_USE_BIOMETRIC) {
+                if UserDefaults.standard.bool(forKey: UD_USE_BIOMETRIC) {
                     AuthenticateView(viewModel: AuthenticationViewModel())
                         .environment(\.managedObjectContext, persistentContainer.viewContext)
                 } else {

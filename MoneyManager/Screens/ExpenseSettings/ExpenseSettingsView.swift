@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 
 struct ExpenseSettingsView: View {
     
@@ -213,41 +214,87 @@ struct ExpenseSettingsView: View {
                                     .foregroundColor(Color.text_secondary_color)
                                     .padding(.horizontal, 4)
                                 
-                                Button(action: { showSignOutAlert = true }) {
-                                    HStack {
-                                        Image(systemName: "applelogo")
-                                            .font(.system(size: 16, weight: .medium))
-                                            .foregroundColor(Color.main_red)
-                                            .frame(width: 36, height: 36)
-                                            .background(Color.main_red.opacity(0.12))
-                                            .cornerRadius(10)
-                                        
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            TextView(text: "Sign Out of Apple ID", type: .button)
-                                                .foregroundColor(Color.main_red)
-                                            Text(authManager.userEmail ?? "Signed in via Apple")
-                                                .modifier(InterFont(.regular, size: 12))
-                                                .foregroundColor(Color.text_secondary_color)
+                                if !authManager.isAuthenticated {
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        HStack(spacing: 12) {
+                                            Image(systemName: "icloud.and.arrow.up.fill")
+                                                .font(.system(size: 20, weight: .semibold))
+                                                .foregroundColor(Color.main_color)
+                                            
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("Cloud Backup & Sync")
+                                                    .modifier(InterFont(.semiBold, size: 14))
+                                                    .foregroundColor(Color.text_primary_color)
+                                                Text("Sign in with Apple to sync expenses across your devices.")
+                                                    .modifier(InterFont(.regular, size: 12))
+                                                    .foregroundColor(Color.text_secondary_color)
+                                            }
                                         }
-                                        Spacer()
-                                        Image(systemName: "rectangle.portrait.and.arrow.right")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundColor(Color.main_red)
+                                        
+                                        SignInWithAppleButton(
+                                            .signIn,
+                                            onRequest: { request in
+                                                request.requestedScopes = [.fullName, .email]
+                                            },
+                                            onCompletion: { result in
+                                                switch result {
+                                                case .success(let auth):
+                                                    if let credential = auth.credential as? ASAuthorizationAppleIDCredential {
+                                                        authManager.handleSuccessfulAuth(
+                                                            userIdentifier: credential.user,
+                                                            email: credential.email,
+                                                            fullName: credential.fullName
+                                                        )
+                                                    }
+                                                case .failure(let error):
+                                                    print("⚠️ Sign in error: \(error.localizedDescription)")
+                                                }
+                                            }
+                                        )
+                                        .signInWithAppleButtonStyle(themeManager.isDarkMode ? .white : .black)
+                                        .frame(height: 44)
+                                        .cornerRadius(10)
                                     }
                                     .padding(14)
                                     .background(Color.secondary_color)
                                     .cornerRadius(12)
-                                }
-                                .alert(isPresented: $showSignOutAlert) {
-                                    Alert(
-                                        title: Text("Sign Out"),
-                                        message: Text("Are you sure you want to sign out? Your local data will remain saved on this device."),
-                                        primaryButton: .destructive(Text("Sign Out")) {
-                                            authManager.signOut()
-                                            self.presentationMode.wrappedValue.dismiss()
-                                        },
-                                        secondaryButton: .cancel()
-                                    )
+                                } else {
+                                    Button(action: { showSignOutAlert = true }) {
+                                        HStack {
+                                            Image(systemName: "applelogo")
+                                                .font(.system(size: 16, weight: .medium))
+                                                .foregroundColor(Color.main_color)
+                                                .frame(width: 36, height: 36)
+                                                .background(Color.main_color.opacity(0.12))
+                                                .cornerRadius(10)
+                                            
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(authManager.userEmail ?? "Signed in with Apple")
+                                                    .modifier(InterFont(.semiBold, size: 14))
+                                                    .foregroundColor(Color.text_primary_color)
+                                                Text("☁️ CloudKit Sync Active")
+                                                    .modifier(InterFont(.medium, size: 12))
+                                                    .foregroundColor(Color.main_color)
+                                            }
+                                            Spacer()
+                                            Text("Sign Out")
+                                                .modifier(InterFont(.semiBold, size: 13))
+                                                .foregroundColor(Color.main_red)
+                                        }
+                                        .padding(14)
+                                        .background(Color.secondary_color)
+                                        .cornerRadius(12)
+                                    }
+                                    .alert(isPresented: $showSignOutAlert) {
+                                        Alert(
+                                            title: Text("Sign Out"),
+                                            message: Text("Are you sure you want to sign out? Your local data will remain saved on this device."),
+                                            primaryButton: .destructive(Text("Sign Out")) {
+                                                authManager.signOut()
+                                            },
+                                            secondaryButton: .cancel()
+                                        )
+                                    }
                                 }
                             }
                             
