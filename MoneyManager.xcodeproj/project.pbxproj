@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 51;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -19,7 +19,6 @@
 		738B1C3C25C662580067407B /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C3B25C662580067407B /* Models.swift */; };
 		738B1C4025C662890067407B /* InterFontModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C3F25C662890067407B /* InterFontModifier.swift */; };
 		738B1C4325C6629D0067407B /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C4225C6629C0067407B /* ColorExtension.swift */; };
-		AA1B2C3D4E5F60718293A4B6 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F60718293A4B5 /* ThemeManager.swift */; };
 		738B1C4625C662D90067407B /* TextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C4525C662D90067407B /* TextView.swift */; };
 		738B1C4925C662F20067407B /* DropdownButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C4825C662F20067407B /* DropdownButton.swift */; };
 		738B1C4C25C663060067407B /* DismissKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738B1C4B25C663060067407B /* DismissKeyboard.swift */; };
@@ -49,25 +48,26 @@
 		73E688DA25FF32790000462A /* ChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73E688D925FF32790000462A /* ChartView.swift */; };
 		753CBDD325F36864005762B8 /* BiometricAuthUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 753CBDD225F36864005762B8 /* BiometricAuthUtility.swift */; };
 		75C6B48025F37FD20079BCFC /* AuthenticationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C6B47F25F37FD20079BCFC /* AuthenticationViewModel.swift */; };
+		AA1B2C3D4E5F60718293A4B6 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F60718293A4B5 /* ThemeManager.swift */; };
 		FF29C9FFAF86E0452686C5D0 /* Pods_MoneyManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1B0E373FB89DD0864398FEE7 /* Pods_MoneyManager.framework */; };
-		FF46CBDF1D92154A86BC64BD /* ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6C4009BD6BAC4C9AB0588E /* ExchangeRateService.swift */; };
-		FFC623DAD12BAA43ACA78AD0 /* BudgetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF38F5D50C39D144D8B94AC4 /* BudgetManager.swift */; };
-		FF890A12B3456789C0123456 /* SmartCategoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF901B23C4567890D1234567 /* SmartCategoryManager.swift */; };
-		FF789A12B3456789C0123457 /* VoiceExpenseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF789B23C4567890D1234578 /* VoiceExpenseParser.swift */; };
-		FF789A12B3456789C0123458 /* SpeechRecognizerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF789B23C4567890D1234579 /* SpeechRecognizerService.swift */; };
-		FF987A12B3456789C0123480 /* ReceiptScannerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF987B23C4567890D123481 /* ReceiptScannerService.swift */; };
-		FF987A12B3456789C0123482 /* DataScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF987B23C4567890D123483 /* DataScannerView.swift */; };
-		FFA11A12B3456789C0123490 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123491 /* KeychainHelper.swift */; };
-		FFA11A12B3456789C0123492 /* AppleAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123493 /* AppleAuthManager.swift */; };
-		FFA11A12B3456789C0123494 /* AppleSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123495 /* AppleSignInView.swift */; };
-		FFA11A12B3456789C0123496 /* CloudKitSyncMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123497 /* CloudKitSyncMonitor.swift */; };
-		FFB22A12B3456789C0123500 /* BudgetLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB22B23C4567890D123501 /* BudgetLiveActivityAttributes.swift */; };
-		FFB22A12B3456789C0123502 /* BudgetLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB22B23C4567890D123503 /* BudgetLiveActivityManager.swift */; };
-		FFB22A12B3456789C0123504 /* BudgetLiveActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB22B23C4567890D123505 /* BudgetLiveActivityView.swift */; };
-		FFE7E6D4917C7142D581524D /* CurrencyAmountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7395096DE46D47DC95CD80 /* CurrencyAmountView.swift */; };
-		FF602276AF79054AE286B1EE /* BudgetProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA75E5973506A4143AA18FB /* BudgetProgressView.swift */; };
-		FFC7B63287501040FCBA5329 /* CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFDF864ACE006B41C5809BE5 /* CalculatorView.swift */; };
-		FF6FC1FBA3CA014A0E8199BC /* SparklineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF5289D9B7858E4B3099F49C /* SparklineView.swift */; };
+		FF46CBDF1D92154A86BC64BD /* MoneyManager/Library/Services/ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6C4009BD6BAC4C9AB0588E /* MoneyManager/Library/Services/ExchangeRateService.swift */; };
+		FF602276AF79054AE286B1EE /* MoneyManager/Library/Helpers/BudgetProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA75E5973506A4143AA18FB /* MoneyManager/Library/Helpers/BudgetProgressView.swift */; };
+		FF6FC1FBA3CA014A0E8199BC /* MoneyManager/Library/Helpers/SparklineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF5289D9B7858E4B3099F49C /* MoneyManager/Library/Helpers/SparklineView.swift */; };
+		FF789A12B3456789C0123457 /* MoneyManager/Library/Services/VoiceExpenseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF789B23C4567890D1234578 /* MoneyManager/Library/Services/VoiceExpenseParser.swift */; };
+		FF789A12B3456789C0123458 /* MoneyManager/Library/Services/SpeechRecognizerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF789B23C4567890D1234579 /* MoneyManager/Library/Services/SpeechRecognizerService.swift */; };
+		FF890A12B3456789C0123456 /* MoneyManager/Library/Services/SmartCategoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF901B23C4567890D1234567 /* MoneyManager/Library/Services/SmartCategoryManager.swift */; };
+		FF987A12B3456789C0123480 /* MoneyManager/Library/Services/ReceiptScannerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF987B23C4567890D123481 /* MoneyManager/Library/Services/ReceiptScannerService.swift */; };
+		FF987A12B3456789C0123482 /* MoneyManager/Library/Services/DataScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF987B23C4567890D123483 /* MoneyManager/Library/Services/DataScannerView.swift */; };
+		FFA11A12B3456789C0123490 /* MoneyManager/Library/Helpers/KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123491 /* MoneyManager/Library/Helpers/KeychainHelper.swift */; };
+		FFA11A12B3456789C0123492 /* MoneyManager/Library/Services/AppleAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123493 /* MoneyManager/Library/Services/AppleAuthManager.swift */; };
+		FFA11A12B3456789C0123494 /* MoneyManager/Screens/Authenticate/AppleSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123495 /* MoneyManager/Screens/Authenticate/AppleSignInView.swift */; };
+		FFA11A12B3456789C0123496 /* MoneyManager/Library/Services/CloudKitSyncMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA11B23C4567890D123497 /* MoneyManager/Library/Services/CloudKitSyncMonitor.swift */; };
+		FFB22A12B3456789C0123500 /* MoneyManager/Library/Services/BudgetLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB22B23C4567890D123501 /* MoneyManager/Library/Services/BudgetLiveActivityAttributes.swift */; };
+		FFB22A12B3456789C0123502 /* MoneyManager/Library/Services/BudgetLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB22B23C4567890D123503 /* MoneyManager/Library/Services/BudgetLiveActivityManager.swift */; };
+		FFB22A12B3456789C0123504 /* MoneyManager/Library/Services/BudgetLiveActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB22B23C4567890D123505 /* MoneyManager/Library/Services/BudgetLiveActivityView.swift */; };
+		FFC623DAD12BAA43ACA78AD0 /* MoneyManager/Library/Services/BudgetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF38F5D50C39D144D8B94AC4 /* MoneyManager/Library/Services/BudgetManager.swift */; };
+		FFC7B63287501040FCBA5329 /* MoneyManager/Library/Helpers/CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFDF864ACE006B41C5809BE5 /* MoneyManager/Library/Helpers/CalculatorView.swift */; };
+		FFE7E6D4917C7142D581524D /* MoneyManager/Library/Helpers/CurrencyAmountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7395096DE46D47DC95CD80 /* MoneyManager/Library/Helpers/CurrencyAmountView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -87,7 +87,6 @@
 		738B1C3B25C662580067407B /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		738B1C3F25C662890067407B /* InterFontModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterFontModifier.swift; sourceTree = "<group>"; };
 		738B1C4225C6629C0067407B /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
-		AA1B2C3D4E5F60718293A4B5 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		738B1C4525C662D90067407B /* TextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextView.swift; sourceTree = "<group>"; };
 		738B1C4825C662F20067407B /* DropdownButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropdownButton.swift; sourceTree = "<group>"; };
 		738B1C4B25C663060067407B /* DismissKeyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissKeyboard.swift; sourceTree = "<group>"; };
@@ -117,25 +116,26 @@
 		73E688D925FF32790000462A /* ChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartView.swift; sourceTree = "<group>"; };
 		753CBDD225F36864005762B8 /* BiometricAuthUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthUtility.swift; sourceTree = "<group>"; };
 		75C6B47F25F37FD20079BCFC /* AuthenticationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationViewModel.swift; sourceTree = "<group>"; };
+		AA1B2C3D4E5F60718293A4B5 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		B07E4D1AF457AB52E048A8B5 /* Pods-MoneyManager.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MoneyManager.release.xcconfig"; path = "Target Support Files/Pods-MoneyManager/Pods-MoneyManager.release.xcconfig"; sourceTree = "<group>"; };
-		FF6C4009BD6BAC4C9AB0588E /* ExchangeRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/ExchangeRateService.swift"; sourceTree = "<group>"; };
-		FF38F5D50C39D144D8B94AC4 /* BudgetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/BudgetManager.swift"; sourceTree = "<group>"; };
-		FF901B23C4567890D1234567 /* SmartCategoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/SmartCategoryManager.swift"; sourceTree = "<group>"; };
-		FF789B23C4567890D1234578 /* VoiceExpenseParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/VoiceExpenseParser.swift"; sourceTree = "<group>"; };
-		FF789B23C4567890D1234579 /* SpeechRecognizerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/SpeechRecognizerService.swift"; sourceTree = "<group>"; };
-		FF987B23C4567890D123481 /* ReceiptScannerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/ReceiptScannerService.swift"; sourceTree = "<group>"; };
-		FF987B23C4567890D123483 /* DataScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/DataScannerView.swift"; sourceTree = "<group>"; };
-		FFA11B23C4567890D123491 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/KeychainHelper.swift"; sourceTree = "<group>"; };
-		FFA11B23C4567890D123493 /* AppleAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/AppleAuthManager.swift"; sourceTree = "<group>"; };
-		FFA11B23C4567890D123495 /* AppleSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Screens/Authenticate/AppleSignInView.swift"; sourceTree = "<group>"; };
-		FFA11B23C4567890D123497 /* CloudKitSyncMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/CloudKitSyncMonitor.swift"; sourceTree = "<group>"; };
-		FFB22B23C4567890D123501 /* BudgetLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/BudgetLiveActivityAttributes.swift"; sourceTree = "<group>"; };
-		FFB22B23C4567890D123503 /* BudgetLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/BudgetLiveActivityManager.swift"; sourceTree = "<group>"; };
-		FFB22B23C4567890D123505 /* BudgetLiveActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Services/BudgetLiveActivityView.swift"; sourceTree = "<group>"; };
-		FF7395096DE46D47DC95CD80 /* CurrencyAmountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/CurrencyAmountView.swift"; sourceTree = "<group>"; };
-		FFA75E5973506A4143AA18FB /* BudgetProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/BudgetProgressView.swift"; sourceTree = "<group>"; };
-		FFDF864ACE006B41C5809BE5 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/CalculatorView.swift"; sourceTree = "<group>"; };
-		FF5289D9B7858E4B3099F49C /* SparklineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoneyManager/Library/Helpers/SparklineView.swift"; sourceTree = "<group>"; };
+		FF38F5D50C39D144D8B94AC4 /* MoneyManager/Library/Services/BudgetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/BudgetManager.swift; sourceTree = "<group>"; };
+		FF5289D9B7858E4B3099F49C /* MoneyManager/Library/Helpers/SparklineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Helpers/SparklineView.swift; sourceTree = "<group>"; };
+		FF6C4009BD6BAC4C9AB0588E /* MoneyManager/Library/Services/ExchangeRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/ExchangeRateService.swift; sourceTree = "<group>"; };
+		FF7395096DE46D47DC95CD80 /* MoneyManager/Library/Helpers/CurrencyAmountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Helpers/CurrencyAmountView.swift; sourceTree = "<group>"; };
+		FF789B23C4567890D1234578 /* MoneyManager/Library/Services/VoiceExpenseParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/VoiceExpenseParser.swift; sourceTree = "<group>"; };
+		FF789B23C4567890D1234579 /* MoneyManager/Library/Services/SpeechRecognizerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/SpeechRecognizerService.swift; sourceTree = "<group>"; };
+		FF901B23C4567890D1234567 /* MoneyManager/Library/Services/SmartCategoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/SmartCategoryManager.swift; sourceTree = "<group>"; };
+		FF987B23C4567890D123481 /* MoneyManager/Library/Services/ReceiptScannerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/ReceiptScannerService.swift; sourceTree = "<group>"; };
+		FF987B23C4567890D123483 /* MoneyManager/Library/Services/DataScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/DataScannerView.swift; sourceTree = "<group>"; };
+		FFA11B23C4567890D123491 /* MoneyManager/Library/Helpers/KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Helpers/KeychainHelper.swift; sourceTree = "<group>"; };
+		FFA11B23C4567890D123493 /* MoneyManager/Library/Services/AppleAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/AppleAuthManager.swift; sourceTree = "<group>"; };
+		FFA11B23C4567890D123495 /* MoneyManager/Screens/Authenticate/AppleSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Screens/Authenticate/AppleSignInView.swift; sourceTree = "<group>"; };
+		FFA11B23C4567890D123497 /* MoneyManager/Library/Services/CloudKitSyncMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/CloudKitSyncMonitor.swift; sourceTree = "<group>"; };
+		FFA75E5973506A4143AA18FB /* MoneyManager/Library/Helpers/BudgetProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Helpers/BudgetProgressView.swift; sourceTree = "<group>"; };
+		FFB22B23C4567890D123501 /* MoneyManager/Library/Services/BudgetLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/BudgetLiveActivityAttributes.swift; sourceTree = "<group>"; };
+		FFB22B23C4567890D123503 /* MoneyManager/Library/Services/BudgetLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/BudgetLiveActivityManager.swift; sourceTree = "<group>"; };
+		FFB22B23C4567890D123505 /* MoneyManager/Library/Services/BudgetLiveActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Services/BudgetLiveActivityView.swift; sourceTree = "<group>"; };
+		FFDF864ACE006B41C5809BE5 /* MoneyManager/Library/Helpers/CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManager/Library/Helpers/CalculatorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +150,31 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		60D54AFD302E043200BB0F83 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				FF5289D9B7858E4B3099F49C /* MoneyManager/Library/Helpers/SparklineView.swift */,
+				FFDF864ACE006B41C5809BE5 /* MoneyManager/Library/Helpers/CalculatorView.swift */,
+				FF6C4009BD6BAC4C9AB0588E /* MoneyManager/Library/Services/ExchangeRateService.swift */,
+				FF38F5D50C39D144D8B94AC4 /* MoneyManager/Library/Services/BudgetManager.swift */,
+				FF901B23C4567890D1234567 /* MoneyManager/Library/Services/SmartCategoryManager.swift */,
+				FF789B23C4567890D1234578 /* MoneyManager/Library/Services/VoiceExpenseParser.swift */,
+				FF789B23C4567890D1234579 /* MoneyManager/Library/Services/SpeechRecognizerService.swift */,
+				FF987B23C4567890D123481 /* MoneyManager/Library/Services/ReceiptScannerService.swift */,
+				FF987B23C4567890D123483 /* MoneyManager/Library/Services/DataScannerView.swift */,
+				FFA11B23C4567890D123491 /* MoneyManager/Library/Helpers/KeychainHelper.swift */,
+				FFA11B23C4567890D123493 /* MoneyManager/Library/Services/AppleAuthManager.swift */,
+				FFA11B23C4567890D123495 /* MoneyManager/Screens/Authenticate/AppleSignInView.swift */,
+				FFA11B23C4567890D123497 /* MoneyManager/Library/Services/CloudKitSyncMonitor.swift */,
+				FFB22B23C4567890D123501 /* MoneyManager/Library/Services/BudgetLiveActivityAttributes.swift */,
+				FFB22B23C4567890D123503 /* MoneyManager/Library/Services/BudgetLiveActivityManager.swift */,
+				FFB22B23C4567890D123505 /* MoneyManager/Library/Services/BudgetLiveActivityView.swift */,
+				FF7395096DE46D47DC95CD80 /* MoneyManager/Library/Helpers/CurrencyAmountView.swift */,
+				FFA75E5973506A4143AA18FB /* MoneyManager/Library/Helpers/BudgetProgressView.swift */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 		733763A827120DB600AA983A /* Screens */ = {
 			isa = PBXGroup;
 			children = (
@@ -198,6 +223,7 @@
 				738B1C1525C65DFE0067407B /* Products */,
 				8750B56D6AA40715F5AA8490 /* Pods */,
 				797DEE244C92A7FEC658698F /* Frameworks */,
+				60D54AFD302E043200BB0F83 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -471,9 +497,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-MoneyManager/Pods-MoneyManager-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-MoneyManager/Pods-MoneyManager-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -487,24 +517,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FF6FC1FBA3CA014A0E8199BC /* SparklineView.swift in Sources */,
-				FFC7B63287501040FCBA5329 /* CalculatorView.swift in Sources */,
-				FF46CBDF1D92154A86BC64BD /* ExchangeRateService.swift in Sources */,
-				FFC623DAD12BAA43ACA78AD0 /* BudgetManager.swift in Sources */,
-				FF890A12B3456789C0123456 /* SmartCategoryManager.swift in Sources */,
-				FF789A12B3456789C0123457 /* VoiceExpenseParser.swift in Sources */,
-				FF789A12B3456789C0123458 /* SpeechRecognizerService.swift in Sources */,
-				FF987A12B3456789C0123480 /* ReceiptScannerService.swift in Sources */,
-				FF987A12B3456789C0123482 /* DataScannerView.swift in Sources */,
-				FFA11A12B3456789C0123490 /* KeychainHelper.swift in Sources */,
-				FFA11A12B3456789C0123492 /* AppleAuthManager.swift in Sources */,
-				FFA11A12B3456789C0123494 /* AppleSignInView.swift in Sources */,
-				FFA11A12B3456789C0123496 /* CloudKitSyncMonitor.swift in Sources */,
-				FFB22A12B3456789C0123500 /* BudgetLiveActivityAttributes.swift in Sources */,
-				FFB22A12B3456789C0123502 /* BudgetLiveActivityManager.swift in Sources */,
-				FFB22A12B3456789C0123504 /* BudgetLiveActivityView.swift in Sources */,
-				FFE7E6D4917C7142D581524D /* CurrencyAmountView.swift in Sources */,
-				FF602276AF79054AE286B1EE /* BudgetProgressView.swift in Sources */,
+				FF6FC1FBA3CA014A0E8199BC /* MoneyManager/Library/Helpers/SparklineView.swift in Sources */,
+				FFC7B63287501040FCBA5329 /* MoneyManager/Library/Helpers/CalculatorView.swift in Sources */,
+				FF46CBDF1D92154A86BC64BD /* MoneyManager/Library/Services/ExchangeRateService.swift in Sources */,
+				FFC623DAD12BAA43ACA78AD0 /* MoneyManager/Library/Services/BudgetManager.swift in Sources */,
+				FF890A12B3456789C0123456 /* MoneyManager/Library/Services/SmartCategoryManager.swift in Sources */,
+				FF789A12B3456789C0123457 /* MoneyManager/Library/Services/VoiceExpenseParser.swift in Sources */,
+				FF789A12B3456789C0123458 /* MoneyManager/Library/Services/SpeechRecognizerService.swift in Sources */,
+				FF987A12B3456789C0123480 /* MoneyManager/Library/Services/ReceiptScannerService.swift in Sources */,
+				FF987A12B3456789C0123482 /* MoneyManager/Library/Services/DataScannerView.swift in Sources */,
+				FFA11A12B3456789C0123490 /* MoneyManager/Library/Helpers/KeychainHelper.swift in Sources */,
+				FFA11A12B3456789C0123492 /* MoneyManager/Library/Services/AppleAuthManager.swift in Sources */,
+				FFA11A12B3456789C0123494 /* MoneyManager/Screens/Authenticate/AppleSignInView.swift in Sources */,
+				FFA11A12B3456789C0123496 /* MoneyManager/Library/Services/CloudKitSyncMonitor.swift in Sources */,
+				FFB22A12B3456789C0123500 /* MoneyManager/Library/Services/BudgetLiveActivityAttributes.swift in Sources */,
+				FFB22A12B3456789C0123502 /* MoneyManager/Library/Services/BudgetLiveActivityManager.swift in Sources */,
+				FFB22A12B3456789C0123504 /* MoneyManager/Library/Services/BudgetLiveActivityView.swift in Sources */,
+				FFE7E6D4917C7142D581524D /* MoneyManager/Library/Helpers/CurrencyAmountView.swift in Sources */,
+				FF602276AF79054AE286B1EE /* MoneyManager/Library/Helpers/BudgetProgressView.swift in Sources */,
 				738B1C3825C661750067407B /* ExpenseView.swift in Sources */,
 				73998C5525DA5578007D735B /* AttachmentHandler.swift in Sources */,
 				738B1C8425C6764B0067407B /* ExpenseDetailedViewModel.swift in Sources */,
@@ -662,9 +692,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MoneyManager/MoneyManager.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"MoneyManager/Preview Content\"";
-				DEVELOPMENT_TEAM = 7S7EBZGDA6;
+				DEVELOPMENT_TEAM = 3YD2RVRFYC;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = MoneyManager/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -673,7 +704,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.moneymanager.MoneyManager;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ayushrana.TrackMint;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -686,9 +717,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MoneyManager/MoneyManager.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"MoneyManager/Preview Content\"";
-				DEVELOPMENT_TEAM = 7S7EBZGDA6;
+				DEVELOPMENT_TEAM = 3YD2RVRFYC;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = MoneyManager/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -697,7 +729,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.moneymanager.MoneyManager;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ayushrana.TrackMint;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

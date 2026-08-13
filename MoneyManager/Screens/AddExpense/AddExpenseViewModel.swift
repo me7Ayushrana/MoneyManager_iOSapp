@@ -118,6 +118,9 @@ class AddExpenseViewModel: ObservableObject {
             self.selectedTag = tagKey
             self.tagTitle = getTransTagTitle(transTag: tagKey)
         }
+        
+        self.selectedType = parsed.transactionType
+        self.typeTitle = parsed.transactionType == TRANS_TYPE_INCOME ? "Income" : "Expense"
     }
     
     init(expenseObj: ExpenseCD? = nil) {
@@ -130,13 +133,13 @@ class AddExpenseViewModel: ObservableObject {
             self.selectedCurrencyCode = expenseObj.resolvedCurrencyCode
         } else {
             self.amount = ""
-            self.typeTitle = "Income"
+            self.typeTitle = "Expense"
             self.selectedCurrencyCode = UserDefaults.standard.string(forKey: UD_DISPLAY_CURRENCY) ?? "INR"
         }
         self.occuredOn = expenseObj?.occuredOn ?? Date()
         self.note = expenseObj?.note ?? ""
         self.tagTitle = getTransTagTitle(transTag: expenseObj?.tag ?? TRANS_TAG_TRANSPORT)
-        self.selectedType = expenseObj?.type ?? TRANS_TYPE_INCOME
+        self.selectedType = expenseObj?.type ?? TRANS_TYPE_EXPENSE
         self.selectedTag = expenseObj?.tag ?? TRANS_TAG_TRANSPORT
         if let data = expenseObj?.imageAttached {
             self.imageAttached = UIImage(data: data)

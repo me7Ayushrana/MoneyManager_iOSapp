@@ -15,6 +15,7 @@ struct ParsedVoiceExpense {
     let date: Date
     let title: String
     let suggestedTagKey: String?
+    let transactionType: String
     let isSuccess: Bool
 }
 
@@ -28,10 +29,13 @@ class VoiceExpenseParser {
     func parse(_ rawText: String, defaultCurrency: String) -> ParsedVoiceExpense {
         let trimmed = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            return ParsedVoiceExpense(rawText: rawText, amount: nil, currencyCode: defaultCurrency, date: Date(), title: "", suggestedTagKey: nil, isSuccess: false)
+            return ParsedVoiceExpense(rawText: rawText, amount: nil, currencyCode: defaultCurrency, date: Date(), title: "", suggestedTagKey: nil, transactionType: TRANS_TYPE_EXPENSE, isSuccess: false)
         }
         
         var workingText = trimmed
+        
+        // 0. Detect Expense vs Income transaction type intent
+        let transactionType = extractTransactionType(from: workingText)
         
         // 1. Extract Date reference
         let (extractedDate, textAfterDate) = extractDate(from: workingText)
@@ -65,8 +69,20 @@ class VoiceExpenseParser {
             date: extractedDate,
             title: finalTitle,
             suggestedTagKey: suggestedTagKey,
+            transactionType: transactionType,
             isSuccess: success
         )
+    }
+    
+    private func extractTransactionType(from text: String) -> String {
+        let lower = text.lowercased()
+        let incomeKeywords = ["earned", "earning", "received", "salary", "credited", "income", "got paid", "cashback", "refund", "stipend", "deposit", "gain", "freelance"]
+        for kw in incomeKeywords {
+            if lower.contains(kw) {
+                return TRANS_TYPE_INCOME
+            }
+        }
+        return TRANS_TYPE_EXPENSE
     }
     
     // MARK: - Amount Extraction
