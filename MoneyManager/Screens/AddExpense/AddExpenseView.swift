@@ -49,25 +49,15 @@ struct AddExpenseView: View {
                             ToolbarModelView(title: "Edit Transaction", button1Icon: IMAGE_DELETE_ICON) { self.presentationMode.wrappedValue.dismiss() }
                                 button1Method: { self.confirmDelete = true }
                         }
-                    }.alert(isPresented: $confirmDelete,
-                            content: {
-                                Alert(title: Text(APP_NAME),
-                                      message: Text("Are you sure you want to delete this transaction?"),
-                                      primaryButton: .destructive(Text("Delete")) {
-                                          viewModel.deleteTransaction(managedObjectContext: self.managedObjectContext)
-                                      },
-                                      secondaryButton: .cancel(Text("Cancel"), action: { confirmDelete = false }))
-                            })
-                    .alert(isPresented: $viewModel.showVoicePermissionAlert) {
+                    }
+                    .alert(isPresented: $confirmDelete) {
                         Alert(
-                            title: Text("Microphone Access Required"),
-                            message: Text("TrackMint requires Speech Recognition and Microphone access for voice dictation. Please enable them in iOS Settings."),
-                            primaryButton: .default(Text("Settings"), action: {
-                                if let url = URL(string: UIApplication.openSettingsURLString) {
-                                    UIApplication.shared.open(url)
-                                }
-                            }),
-                            secondaryButton: .cancel(Text("Cancel"))
+                            title: Text(APP_NAME),
+                            message: Text("Are you sure you want to delete this transaction?"),
+                            primaryButton: .destructive(Text("Delete")) {
+                                viewModel.deleteTransaction(managedObjectContext: self.managedObjectContext)
+                            },
+                            secondaryButton: .cancel(Text("Cancel"), action: { confirmDelete = false })
                         )
                     }
                     
@@ -157,6 +147,18 @@ struct AddExpenseView: View {
                                     .padding(.horizontal, 10).frame(height: 50)
                                     .background(viewModel.speechRecognizer.isRecording ? Color.main_red : Color.main_color.opacity(0.14))
                                     .cornerRadius(8)
+                                }
+                                .alert(isPresented: $viewModel.showVoicePermissionAlert) {
+                                    Alert(
+                                        title: Text("Microphone Access Required"),
+                                        message: Text("TrackMint requires Speech Recognition and Microphone access for voice dictation. Please enable them in iOS Settings."),
+                                        primaryButton: .default(Text("Settings"), action: {
+                                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                                UIApplication.shared.open(url)
+                                            }
+                                        }),
+                                        secondaryButton: .cancel(Text("Cancel"))
+                                    )
                                 }
                                 .padding(.trailing, 8)
                             }

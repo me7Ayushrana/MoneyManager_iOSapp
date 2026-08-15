@@ -18,6 +18,7 @@ struct ExpenseDetailedView: View {
     
     @StateObject var viewModel: ExpenseDetailedViewModel
     @State private var showEditExpense = false
+    @State private var confirmDelete = false
     
     init(expenseObj: ExpenseCD) {
         _viewModel = StateObject(wrappedValue: ExpenseDetailedViewModel(expenseObj: expenseObj))
@@ -37,9 +38,12 @@ struct ExpenseDetailedView: View {
             VStack(spacing: 0) {
                 ToolbarModelView(
                     title: isIncome ? "Income Detail" : "Expense Detail",
-                    button1Icon: IMAGE_SHARE_ICON
-                ) { presentationMode.wrappedValue.dismiss() }
-                button1Method: { viewModel.shareNote() }
+                    button1Icon: IMAGE_DELETE_ICON,
+                    button2Icon: IMAGE_SHARE_ICON,
+                    backButtonClick: { presentationMode.wrappedValue.dismiss() },
+                    button1Method: { confirmDelete = true },
+                    button2Method: { viewModel.shareNote() }
+                )
                 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 16) {
@@ -145,6 +149,21 @@ struct ExpenseDetailedView: View {
             }
         }
         .navigationBarHidden(true)
+        .alert(isPresented: $confirmDelete) {
+            Alert(
+                title: Text(APP_NAME),
+                message: Text("Are you sure you want to delete this transaction?"),
+                primaryButton: .destructive(Text("Delete")) {
+                    viewModel.deleteNote(managedObjectContext: managedObjectContext)
+                },
+                secondaryButton: .cancel(Text("Cancel"))
+            )
+        }
+        .onChange(of: viewModel.closePresenter) { close in
+            if close {
+                presentationMode.wrappedValue.dismiss()
+            }
+        }
         .sheet(isPresented: $showEditExpense) {
             AddExpenseView(viewModel: AddExpenseViewModel(expenseObj: viewModel.expenseObj))
                 .environment(\.managedObjectContext, managedObjectContext)
