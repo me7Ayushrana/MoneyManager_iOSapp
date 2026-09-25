@@ -174,8 +174,7 @@ class ReceiptScannerService {
     }
     
     private func extractNumberFromLine(_ line: String) -> Double? {
-        // Regex matching numbers with optional currency symbols: e.g. $35.52, ₹787.50, Rs. 450, 45.00
-        let pattern = #"(?:[$₹€£¥]|Rs\.?|INR|USD|EUR|GBP)?\s*(\d{1,6}(?:[\.,]\d{2})?)\s*(?:[$₹€£¥]|Rs\.?|INR|USD|EUR|GBP)?"#
+        let pattern = #"(?:[$₹€£¥]|Rs\.?|INR|USD|EUR|GBP)?\s*(\d{1,3}(?:[,\s]\d{3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)"#
         
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return nil }
         let nsString = line as NSString
@@ -185,7 +184,8 @@ class ReceiptScannerService {
         for match in matches {
             if match.numberOfRanges > 1 {
                 let numRange = match.range(at: 1)
-                let numStr = nsString.substring(with: numRange).replacingOccurrences(of: ",", with: ".")
+                let rawStr = nsString.substring(with: numRange)
+                let numStr = rawStr.replacingOccurrences(of: ",", with: "").replacingOccurrences(of: " ", with: "")
                 if let val = Double(numStr), val > 0 {
                     foundNumbers.append(val)
                 }

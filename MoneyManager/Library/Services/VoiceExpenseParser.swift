@@ -166,7 +166,12 @@ class VoiceExpenseParser {
         
         for (code, keywords) in currencyMap {
             for kw in keywords {
-                let pattern = #"\b"# + NSRegularExpression.escapedPattern(for: kw) + #"\b"#
+                let pattern: String
+                if kw.rangeOfCharacter(from: CharacterSet.alphanumerics.inverted) != nil {
+                    pattern = NSRegularExpression.escapedPattern(for: kw)
+                } else {
+                    pattern = #"\b"# + NSRegularExpression.escapedPattern(for: kw) + #"\b"#
+                }
                 if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
                     let nsString = working as NSString
                     if let match = regex.firstMatch(in: working, options: [], range: NSRange(location: 0, length: nsString.length)) {
